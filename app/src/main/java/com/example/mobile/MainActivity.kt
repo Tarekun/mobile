@@ -12,13 +12,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
-import com.example.mobile.recorders.AudioRecorder
+import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.ui.theme.MobileTheme
-import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun Content(
@@ -53,10 +58,10 @@ fun Content(
 class MainActivity : ComponentActivity() {
 
     private val recorder by lazy {
-        AudioRecorder(applicationContext)
+        AudioMonitor(applicationContext)
     }
-
-    private var audioFile: File? = null
+    var value: Int by mutableStateOf(0)
+    var audioMonitoringJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +70,6 @@ class MainActivity : ComponentActivity() {
             arrayOf(Manifest.permission.RECORD_AUDIO),
             0
         )
-        var value = 0
 
         setContent {
             MobileTheme {
@@ -73,19 +77,32 @@ class MainActivity : ComponentActivity() {
                     maxVolume = 0,
                     currentVolume = value,
                     start = {
-                        File(cacheDir, "audio.mp3").also {
-                            recorder.start(it)
-                            audioFile = it
-                        }
+                        recorder.startMonitoring()
+                        this.startAudioMonitoring()
                     },
                     stop = {
-                        recorder.stop()
+                        recorder.stopMonitoring()
+                        this.stopAudioMonitoring()
                     },
                     read = {
-                        value = recorder.read()
-                        Log.d("customtag", "read value to be displayed is $value")
+                        value = recorder.readValue()
                     })
             }
         }
+    }
+
+    fun startAudioMonitoring() {
+        audioMonitoringJob = CoroutineScope(Dispatchers.Default).launch {
+            //TODO: look in more detail coroutines and see if there's a better way to do this
+            while(true) {
+                value = recorder.readValue()
+                Log.d("customtag", "passo di qua")
+                delay(1000)
+            }
+        }
+    }
+
+    fun stopAudioMonitoring() {
+        audioMonitoringJob?.cancel()
     }
 }

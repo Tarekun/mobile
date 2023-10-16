@@ -1,23 +1,25 @@
-package com.example.mobile.recorders
+package com.example.mobile.monitors
 
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
-import java.io.File
-import java.io.FileOutputStream
 
-class AudioRecorder(
+class AudioMonitor(
     private val context: Context
-) {
+): IMonitor {
     private var recorder: MediaRecorder? = null
 
+    /**
+     * Nasconde la chiamata al costruttore di MediaRecorder corrispondente alla versione del
+     * SDK in uso sul dispositivo
+     */
     private fun createRecorder(): MediaRecorder {
         return if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(context)
         } else MediaRecorder()
     }
 
-    fun start(outputFile: File) {
+    override fun startMonitoring() {
         createRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -35,17 +37,16 @@ class AudioRecorder(
         }
     }
 
-    fun stop() {
-        //notice that if you call stop() before having called start() an exception will be raised
+    override fun stopMonitoring() {
+        //TODO: maybe protect this function so that it throws if start wasn't called yet
         recorder?.stop()
         recorder?.reset()
+        recorder?.release()
         recorder = null
     }
 
-    fun read(): Int {
-//        recorder?.start()
-        val value = recorder?.getMaxAmplitude() ?: 0
-        recorder?.pause()
-        return value
+    override fun readValue(): Int {
+        //TODO: implement conversion to db
+        return recorder?.getMaxAmplitude() ?: 0
     }
 }
