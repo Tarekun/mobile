@@ -1,8 +1,8 @@
 package com.example.mobile
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -24,32 +24,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 fun Content(
-    maxVolume: Int,
-    currentVolume: Int,
+    currentVolume: Double,
     start: () -> Unit,
     stop: () -> Unit,
-    read: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val twoDecimalValue = (currentVolume * 100.0).roundToInt() / 100.0
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Max Value: $maxVolume", modifier = modifier)
-            Text(text = "Current Value: $currentVolume", modifier = modifier)
+            Text(text = "Current Value: $twoDecimalValue dBFS", modifier = modifier)
             Button(onClick = start) {
                 Text(text = "Start recorder")
             }
             Button(onClick = stop) {
                 Text(text = "Stop recorder")
-            }
-            Button(onClick = read) {
-                Text(text = "Read recorded value")
             }
         }
     }
@@ -58,51 +54,63 @@ fun Content(
 class MainActivity : ComponentActivity() {
 
     private val recorder by lazy {
-        AudioMonitor(applicationContext)
+        AudioMonitor()
     }
-    var value: Int by mutableStateOf(0)
-    var audioMonitoringJob: Job? = null
+    private var value: Double by mutableStateOf(0.0)
+    private var audioMonitoringJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.RECORD_AUDIO),
-            0
-        )
+        requestRecordAudioPermission()
 
         setContent {
             MobileTheme {
                 Content(
-                    maxVolume = 0,
                     currentVolume = value,
                     start = {
+                        //TODO: handle this in a proper way
+                        if (ActivityCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.RECORD_AUDIO
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            requestRecordAudioPermission()
+                        }
                         recorder.startMonitoring()
                         this.startAudioMonitoring()
                     },
                     stop = {
                         recorder.stopMonitoring()
                         this.stopAudioMonitoring()
-                    },
-                    read = {
-                        value = recorder.readValue()
                     })
             }
         }
     }
 
-    fun startAudioMonitoring() {
-        audioMonitoringJob = CoroutineScope(Dispatchers.Default).launch {
-            //TODO: look in more detail coroutines and see if there's a better way to do this
+    private fun requestRecordAudioPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            0
+        )
+    }
+
+    private fun startAudioMonitoring() {
+        audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
             while(true) {
                 value = recorder.readValue()
-                Log.d("customtag", "passo di qua")
-                delay(1000)
+                delay(AudioMonitor.defaultTimePeriodMs)
             }
         }
     }
 
-    fun stopAudioMonitoring() {
+    private fun stopAudioMonitoring() {
         audioMonitoringJob?.cancel()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //rilascia le coroutine
+        stopAudioMonitoring()
     }
 }
