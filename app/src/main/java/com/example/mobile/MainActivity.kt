@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.example.mobile.monitors.AudioMonitor
+import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.ui.theme.MobileTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,64 +54,106 @@ fun Content(
 
 class MainActivity : ComponentActivity() {
 
-    private val recorder by lazy {
+    private val audioMonitor by lazy {
         AudioMonitor()
+    }
+    private val wifiMonitor by lazy {
+        WifiMonitor(applicationContext)
     }
     private var value: Double by mutableStateOf(0.0)
     private var audioMonitoringJob: Job? = null
+    private var wifiMonitoringJob: Job? = null
+
+    private fun startMonitoring() {
+        wifiMonitor.startMonitoring()
+        this.startWifiMonitoring()
+//        //TODO: handle this in a proper way
+//        if (ActivityCompat.checkSelfPermission(
+//                this,
+//                Manifest.permission.RECORD_AUDIO
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            requestRecordAudioPermission()
+//        }
+//        audioMonitor.startMonitoring()
+//        this.startAudioMonitoring()
+    }
+
+    private fun stopMonitoring() {
+        wifiMonitor.stopMonitoring()
+        this.stopWifiMonitoring()
+//        audioMonitor.stopMonitoring()
+//        this.stopAudioMonitoring()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestRecordAudioPermission()
+        requestPermissions()
 
         setContent {
             MobileTheme {
                 Content(
                     currentVolume = value,
                     start = {
-                        //TODO: handle this in a proper way
-                        if (ActivityCompat.checkSelfPermission(
-                                this,
-                                Manifest.permission.RECORD_AUDIO
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            requestRecordAudioPermission()
-                        }
-                        recorder.startMonitoring()
-                        this.startAudioMonitoring()
+                        startMonitoring()
                     },
                     stop = {
-                        recorder.stopMonitoring()
-                        this.stopAudioMonitoring()
+                        stopMonitoring()
                     })
             }
         }
     }
 
-    private fun requestRecordAudioPermission() {
+    private fun requestPermissions() {
         ActivityCompat.requestPermissions(
             this,
-            arrayOf(Manifest.permission.RECORD_AUDIO),
+            arrayOf(
+//                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+
+            ),
             0
         )
     }
 
+
+    //test monitoring for AudioMonitor
     private fun startAudioMonitoring() {
+        value = 0.0
         audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
             while(true) {
-                value = recorder.readValue()
+                value = audioMonitor.readValue()
                 delay(AudioMonitor.defaultTimePeriodMs)
             }
         }
     }
-
     private fun stopAudioMonitoring() {
         audioMonitoringJob?.cancel()
+    }
+
+
+    //test monitoring for WifiMonitor
+    private fun startWifiMonitoring() {
+        value = 0.0
+        wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
+            while(true) {
+                value = wifiMonitor.readValue()
+                delay(WifiMonitor.defaultTimePeriodMs)
+            }
+        }
+    }
+    private fun stopWifiMonitoring() {
+        wifiMonitoringJob?.cancel()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         //rilascia le coroutine
         stopAudioMonitoring()
+        stopWifiMonitoring()
     }
 }
