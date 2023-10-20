@@ -1,8 +1,11 @@
 package com.example.mobile
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -58,32 +61,20 @@ class MainActivity : ComponentActivity() {
         AudioMonitor()
     }
     private val wifiMonitor by lazy {
-        WifiMonitor(applicationContext)
+        WifiMonitor(this, applicationContext)
     }
     private var value: Double by mutableStateOf(0.0)
     private var audioMonitoringJob: Job? = null
     private var wifiMonitoringJob: Job? = null
 
     private fun startMonitoring() {
-        wifiMonitor.startMonitoring()
+        value = 0.0
         this.startWifiMonitoring()
-//        //TODO: handle this in a proper way
-//        if (ActivityCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.RECORD_AUDIO
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            requestRecordAudioPermission()
-//        }
-//        audioMonitor.startMonitoring()
-//        this.startAudioMonitoring()
     }
 
     private fun stopMonitoring() {
-        wifiMonitor.stopMonitoring()
         this.stopWifiMonitoring()
-//        audioMonitor.stopMonitoring()
-//        this.stopAudioMonitoring()
+        value = 0.0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,10 +99,8 @@ class MainActivity : ComponentActivity() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
-//                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.ACCESS_NETWORK_STATE,
-                Manifest.permission.INTERNET,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
 
@@ -123,7 +112,6 @@ class MainActivity : ComponentActivity() {
 
     //test monitoring for AudioMonitor
     private fun startAudioMonitoring() {
-        value = 0.0
         audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
             while(true) {
                 value = audioMonitor.readValue()
@@ -138,15 +126,17 @@ class MainActivity : ComponentActivity() {
 
     //test monitoring for WifiMonitor
     private fun startWifiMonitoring() {
-        value = 0.0
-        wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
-            while(true) {
-                value = wifiMonitor.readValue()
-                delay(WifiMonitor.defaultTimePeriodMs)
+        wifiMonitor.startMonitoring {
+            wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
+                while(true) {
+                    value = wifiMonitor.readValue()
+                    delay(WifiMonitor.defaultTimePeriodMs)
+                }
             }
         }
     }
     private fun stopWifiMonitoring() {
+        wifiMonitor.stopMonitoring()
         wifiMonitoringJob?.cancel()
     }
 
