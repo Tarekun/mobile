@@ -102,8 +102,6 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_WIFI_STATE,
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-
             ),
             0
         )
@@ -112,10 +110,26 @@ class MainActivity : ComponentActivity() {
 
     //test monitoring for AudioMonitor
     private fun startAudioMonitoring() {
-        audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
-            while(true) {
-                value = audioMonitor.readValue()
-                delay(AudioMonitor.defaultTimePeriodMs)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        audioMonitor.startMonitoring {
+            audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
+                while(true) {
+                    value = audioMonitor.readValue()
+                    delay(AudioMonitor.defaultTimePeriodMs)
+                }
             }
         }
     }
@@ -126,6 +140,14 @@ class MainActivity : ComponentActivity() {
 
     //test monitoring for WifiMonitor
     private fun startWifiMonitoring() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions()
+            return
+        }
         wifiMonitor.startMonitoring {
             wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {

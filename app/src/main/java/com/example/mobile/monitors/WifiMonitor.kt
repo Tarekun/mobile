@@ -11,6 +11,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 
 class WifiMonitor(
@@ -67,6 +68,7 @@ class WifiMonitor(
 //        dialog.show()
     }
 
+    @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
     fun startMonitoring(onStart: () -> Unit) {
         //TODO: add strings resources to avoid these hard coded strings
         if (!isWifiEnabled()) {
