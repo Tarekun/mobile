@@ -12,6 +12,8 @@ import android.net.wifi.WifiManager
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.example.mobile.FileSaving.FileManager
+import com.example.mobile.FileSaving.MonitorType
 
 class WifiMonitor(
     activity: Activity,
@@ -21,6 +23,7 @@ class WifiMonitor(
     applicationContext: Context
 ) {
     private val applicationContext = applicationContext
+    private val fileManager = FileManager(applicationContext)
     private val activity = activity
     private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -125,6 +128,9 @@ class WifiMonitor(
             // Calculate average signal strength in dBm
             val totalSignalStrength = scanResults.sumBy { it.level }
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
+            val classification = fileManager.classifyValue(averageSignalStrength,MonitorType.WIFI)
+            fileManager.saveData(MonitorType.WIFI, "$averageSignalStrength ($classification)")
+
             return averageSignalStrength
         }
     }

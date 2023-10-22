@@ -58,7 +58,7 @@ fun Content(
 class MainActivity : ComponentActivity() {
 
     private val audioMonitor by lazy {
-        AudioMonitor()
+        AudioMonitor(applicationContext)
     }
     private val wifiMonitor by lazy {
         WifiMonitor(this, applicationContext)
