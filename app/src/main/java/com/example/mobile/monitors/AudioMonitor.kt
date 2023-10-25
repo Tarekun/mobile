@@ -23,7 +23,7 @@ class AudioMonitor(): IMonitor {
     }
 
     @RequiresPermission(value = "android.permission.RECORD_AUDIO")
-    override fun startMonitoring() {
+    override fun startMonitoring(onStart: () -> Unit) {
         audioRecorder = AudioRecord(
             MediaRecorder.AudioSource.MIC,
             sampleFrequency,
@@ -32,6 +32,7 @@ class AudioMonitor(): IMonitor {
             bufferSize
         )
         audioRecorder?.startRecording()
+        onStart()
     }
 
     override fun stopMonitoring() {
