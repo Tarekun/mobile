@@ -3,6 +3,7 @@ package com.example.mobile.monitors
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +15,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.example.mobile.FileSaving.FileManager
 import com.example.mobile.FileSaving.MonitorType
+import database.DatabaseHelper
 
 class WifiMonitor(
     activity: Activity,
@@ -27,6 +29,8 @@ class WifiMonitor(
     private val activity = activity
     private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private val databaseHelper = DatabaseHelper(applicationContext)
+    private val db = databaseHelper.writableDatabase
 
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
@@ -129,7 +133,15 @@ class WifiMonitor(
             val totalSignalStrength = scanResults.sumBy { it.level }
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
             val classification = fileManager.classifyValue(averageSignalStrength,MonitorType.WIFI)
-            fileManager.saveData(MonitorType.WIFI, "$averageSignalStrength ($classification)")
+            //fileManager.saveData(MonitorType.WIFI, "$averageSignalStrength ($classification)")
+            val values = ContentValues().apply {
+                put("valore", averageSignalStrength) // inserisci il valore desiderato per il campo 'valore'
+                put("classificazione", classification) // inserisci il valore desiderato per il campo 'classificazione'
+            }
+
+            val newRowId = db.insert("wifi", null, values)
+
+            db.close()
 
             return averageSignalStrength
         }

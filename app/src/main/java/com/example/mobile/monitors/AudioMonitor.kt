@@ -1,5 +1,6 @@
 package com.example.mobile.monitors
 
+import android.content.ContentValues
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -9,11 +10,13 @@ import com.example.mobile.FileSaving.FileManager
 import com.example.mobile.FileSaving.MonitorType
 import kotlin.math.log10
 import kotlin.math.sqrt
-
+import database.DatabaseHelper
 
 
 class AudioMonitor(private val context: Context): IMonitor {
     private var fileManager = FileManager(context)
+    private val databaseHelper = DatabaseHelper(context)
+    private val db = databaseHelper.writableDatabase
     private var audioRecorder: AudioRecord? = null
     private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -55,8 +58,17 @@ class AudioMonitor(private val context: Context): IMonitor {
         // reference: https://en.m.wikipedia.org/wiki/DBFS
         val rms = rootMeanSquared(buffer)
         val decibelValue = decibelFromRms(rms)
+        //TODO filemanager era la vecchia classe perscrivere in file( ora su db) ma il metodo classifyvalue è ancora li-> spostarlo
         val classification = fileManager.classifyValue(decibelValue,MonitorType.AUDIO)
-        fileManager.saveData(MonitorType.AUDIO, "$decibelValue ($classification)")
+        //fileManager.saveData(MonitorType.AUDIO, "$decibelValue ($classification)")
+        val values = ContentValues().apply {
+            put("valore", decibelValue) // inserisci il valore desiderato per il campo 'valore'
+            put("classificazione", classification) // inserisci il valore desiderato per il campo 'classificazione'
+        }
+
+        val newRowId = db.insert("audio", null, values)
+
+        db.close()
         return decibelValue
     }
 
