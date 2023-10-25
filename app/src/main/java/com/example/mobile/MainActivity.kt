@@ -1,171 +1,96 @@
 package com.example.mobile
 
 import android.Manifest
-import android.app.AlertDialog
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.*
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
-import com.example.mobile.monitors.AudioMonitor
-import com.example.mobile.monitors.WifiMonitor
+import com.example.mobile.composables.ButtonVariant
+import com.example.mobile.composables.ParametrizedButton
+import com.example.mobile.monitors.IMonitor.MonitorType
+import com.example.mobile.screens.AudioMonitoringScreen
+import com.example.mobile.screens.LteMonitoringScreen
+import com.example.mobile.screens.WifiMonitoringScreen
 import com.example.mobile.ui.theme.MobileTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-
-@Composable
-fun Content(
-    currentVolume: Double,
-    start: () -> Unit,
-    stop: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val twoDecimalValue = (currentVolume * 100.0).roundToInt() / 100.0
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Current Value: $twoDecimalValue dBFS", modifier = modifier)
-            Button(onClick = start) {
-                Text(text = "Start recorder")
-            }
-            Button(onClick = stop) {
-                Text(text = "Stop recorder")
-            }
-        }
-    }
-}
 
 class MainActivity : ComponentActivity() {
 
-    private val audioMonitor by lazy {
-        AudioMonitor()
-    }
-    private val wifiMonitor by lazy {
-        WifiMonitor(this, applicationContext)
-    }
-    private var value: Double by mutableStateOf(0.0)
-    private var audioMonitoringJob: Job? = null
-    private var wifiMonitoringJob: Job? = null
-
-    private fun startMonitoring() {
-        value = 0.0
-        this.startWifiMonitoring()
-    }
-
-    private fun stopMonitoring() {
-        this.stopWifiMonitoring()
-        value = 0.0
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requestPermissions()
-
-        setContent {
-            MobileTheme {
-                Content(
-                    currentVolume = value,
-                    start = {
-                        startMonitoring()
-                    },
-                    stop = {
-                        stopMonitoring()
-                    })
-            }
-        }
-    }
-
-    private fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
+    private fun requestAllPermissions() {
+        requestPermissions(
             arrayOf(
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_WIFI_STATE,
                 Manifest.permission.ACCESS_FINE_LOCATION,
-            ),
+            )
+        )
+    }
+
+    private fun requestPermissions(permissions: Array<String>) {
+        ActivityCompat.requestPermissions(
+            this,
+            permissions,
             0
         )
     }
 
+    // TopAppBar è ancora in modalità experimental
+    @OptIn(ExperimentalMaterial3Api::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-    //test monitoring for AudioMonitor
-    private fun startAudioMonitoring() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        audioMonitor.startMonitoring {
-            audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
-                while(true) {
-                    value = audioMonitor.readValue()
-                    delay(AudioMonitor.defaultTimePeriodMs)
+        var inUseMonitor: MonitorType by mutableStateOf(MonitorType.AUDIO)
+        val monitors = listOf(MonitorType.AUDIO, MonitorType.WIFI, MonitorType.LTE)
+        requestAllPermissions()
+        setContent {
+            MobileTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Text(text = "")
+                            },
+                            actions = {
+                                monitors.forEach { monitor ->
+                                    ParametrizedButton(
+                                        //TODO: add icons for buttons
+                                        onClick = {
+                                            inUseMonitor = monitor
+                                        },
+                                        text = monitor.toString(),
+                                        variant = if (inUseMonitor == monitor) ButtonVariant.FILLED else ButtonVariant.TONAL,
+                                        modifier = Modifier,
+                                    )
+                                }
+                            }
+                        )
+                    },
+                    floatingActionButton = {
+
+                    }
+                ) {
+                        innerPadding ->
+                    Box(
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        if (inUseMonitor == MonitorType.AUDIO)
+                            AudioMonitoringScreen(context = this@MainActivity)
+                        else if (inUseMonitor == MonitorType.WIFI)
+                            WifiMonitoringScreen(context = this@MainActivity)
+                        else
+                            LteMonitoringScreen()
+                    }
                 }
             }
         }
-    }
-    private fun stopAudioMonitoring() {
-        audioMonitoringJob?.cancel()
-    }
-
-
-    //test monitoring for WifiMonitor
-    private fun startWifiMonitoring() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions()
-            return
-        }
-        wifiMonitor.startMonitoring {
-            wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
-                while(true) {
-                    value = wifiMonitor.readValue()
-                    delay(WifiMonitor.defaultTimePeriodMs)
-                }
-            }
-        }
-    }
-    private fun stopWifiMonitoring() {
-        wifiMonitor.stopMonitoring()
-        wifiMonitoringJob?.cancel()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        //rilascia le coroutine
-        stopAudioMonitoring()
-        stopWifiMonitoring()
     }
 }
