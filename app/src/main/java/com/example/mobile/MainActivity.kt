@@ -1,6 +1,5 @@
 package com.example.mobile
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
 import com.example.mobile.composables.ButtonVariant
 import com.example.mobile.composables.ParametrizedButton
 import com.example.mobile.monitors.IMonitor.MonitorType
@@ -24,24 +22,6 @@ import com.example.mobile.screens.WifiMonitoringScreen
 import com.example.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
-
-    private fun requestAllPermissions() {
-        requestPermissions(
-            arrayOf(
-                Manifest.permission.RECORD_AUDIO,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            )
-        )
-    }
-
-    private fun requestPermissions(permissions: Array<String>) {
-        ActivityCompat.requestPermissions(
-            this,
-            permissions,
-            0
-        )
-    }
 
     // TopAppBar è ancora in modalità experimental
     @OptIn(ExperimentalMaterial3Api::class)
