@@ -5,7 +5,16 @@ plugins {
 
 android {
     namespace = "com.example.mobile"
-    compileSdk = 33
+    // Updated for:
+    // Dependency 'androidx.emoji2:emoji2:1.4.0' requires libraries and applications that
+    // depend on it to compile against version 34 or later of the
+    // Android APIs.
+    //
+    // :app is currently compiled against android-33.
+    //
+    // Recommended action: Update this project to use a newer compileSdk
+    // of at least 34, for example 34.
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.mobile"
@@ -66,4 +75,5 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 }

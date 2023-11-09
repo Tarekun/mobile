@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
         var inUseMonitor: MonitorType by mutableStateOf(MonitorType.AUDIO)
         val monitors = listOf(MonitorType.AUDIO, MonitorType.WIFI, MonitorType.LTE)
-        requestAllPermissions()
+
         setContent {
             MobileTheme {
                 Scaffold(
