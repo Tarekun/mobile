@@ -3,6 +3,8 @@ package com.example.mobile.screens
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,13 +27,11 @@ fun WifiMonitoringScreen(
         //TODO: make sure this is correct
         WifiMonitor(context, context)
     }
-    var wifiMonitoringJob: Job? = null
+    var wifiMonitoringJob: Job? by remember { mutableStateOf(null) }
     var value: Double by remember { mutableStateOf(0.0) }
 
-    fun startMonitoring() {
-        //TODO: handle permissions properly
-        //see https://medium.com/@rzmeneghelo/how-to-request-permissions-in-jetpack-compose-a-step-by-step-guide-7ce4b7782bd7
-        value = 0.0
+    fun startRoutine() {
+        // aggiunto così l'ide non si lamenta della chiamata a `readValue` nella coroutine
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -39,6 +39,8 @@ fun WifiMonitoringScreen(
         ) {
             return
         }
+
+        value = 0.0
         wifiMonitor.startMonitoring {
             wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
@@ -46,6 +48,29 @@ fun WifiMonitoringScreen(
                     delay(WifiMonitor.defaultTimePeriodMs)
                 }
             }
+        }
+    }
+
+    val permissionRequestLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startRoutine()
+        }
+        else {
+            //TODO: explain that the permission is needed and maybe take to the settings
+        }
+    }
+
+    fun startMonitoring() {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionRequestLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            startRoutine()
         }
     }
 

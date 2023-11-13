@@ -1,18 +1,14 @@
 package com.example.mobile.monitors
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresPermission
-import androidx.core.app.ActivityCompat
 
 class WifiMonitor(
     activity: Activity,
@@ -98,32 +94,14 @@ class WifiMonitor(
     }
 
     // value read in dBm
+    @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     fun readValue(): Double {
-        //TODO: properly manage permissions
-        if (ActivityCompat.checkSelfPermission(
-                this.applicationContext,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return 0.0
-        }
-
         //TODO: implement signal monitoring for both any network and only the connected one
-        //TODO: get rid of logging
         val scanResults: List<ScanResult> = wifiManager.scanResults
         if (scanResults.isEmpty()) {
-            Log.d("miotag", "SCAN RESULT VUOTO")
             return 0.0
         }
         else {
-            Log.d("miotag", "SCAN CON ${scanResults.size} RISULTATI")
             // Calculate average signal strength in dBm
             val totalSignalStrength = scanResults.sumBy { it.level }
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
