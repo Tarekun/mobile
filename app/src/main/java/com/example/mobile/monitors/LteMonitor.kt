@@ -7,7 +7,9 @@ import android.telephony.SignalStrength
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.telephony.TelephonyCallback.SignalStrengthsListener
+import androidx.annotation.RequiresApi
 
+@RequiresApi(Build.VERSION_CODES.S)
 class LteMonitor(
     context: Context
 ): IMonitor {
@@ -17,26 +19,32 @@ class LteMonitor(
 
     private var context = context
     private var signalStrengthListener: PhoneStateListener? = null
-    private val telephonyCallback = object : TelephonyCallback(), SignalStrengthsListener {
-        override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
-            // Calculate signal strength value (example: LTE signal strength)
-            signalDbm = computeDbm(signalStrength)
-        }
-    }
+    private var telephonyCallback: TelephonyCallback? = null
 
-    //TODO: properly implement this function
+
     private fun computeDbm(signalStrength: SignalStrength?): Double {
-        var baseValue = signalStrength?.level?.toDouble() ?: 0.0
-        return baseValue * 4.0
+        val cellInfos = signalStrength?.cellSignalStrengths ?: emptyList()
+
+        //TODO: make sure this average ever makes sense
+        return if (cellInfos.size > 0)
+            cellInfos.sumOf{ it.dbm } / cellInfos.size.toDouble()
+        else 0.0
     }
 
     override fun startMonitoring(onStart: () -> Unit) {
         // da Build.VERSION_CODES.S TelephonyManager#listen diventa deprecata e
         // si usa TelephonyManager#registerTelephonyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            telephonyCallback = object : TelephonyCallback(), SignalStrengthsListener {
+                override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
+                    signalDbm = computeDbm(signalStrength)
+                }
+            }
+
+            // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
             telephonyManager.registerTelephonyCallback(
                 context.mainExecutor,
-                telephonyCallback
+                telephonyCallback as TelephonyCallback
             )
         } else {
             signalStrengthListener = object : PhoneStateListener() {
@@ -54,7 +62,8 @@ class LteMonitor(
 
     override fun stopMonitoring() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            telephonyManager.unregisterTelephonyCallback(telephonyCallback)
+            // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
+            telephonyManager.unregisterTelephonyCallback(telephonyCallback as TelephonyCallback)
         } else {
             signalStrengthListener?.let {
                 telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE)
