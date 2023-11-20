@@ -5,30 +5,34 @@ import android.os.Build
 import android.telephony.PhoneStateListener
 import android.telephony.SignalStrength
 import android.telephony.TelephonyCallback
-import android.telephony.TelephonyManager
 import android.telephony.TelephonyCallback.SignalStrengthsListener
-import androidx.annotation.RequiresApi
+import android.telephony.TelephonyManager
 
-@RequiresApi(Build.VERSION_CODES.S)
 class LteMonitor(
     context: Context
 ): IMonitor {
     private val telephonyManager: TelephonyManager =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     private var signalDbm: Double = 0.0
+    private val noSignalDbm = Double.NEGATIVE_INFINITY
 
-    private var context = context
+    private val context = context
     private var signalStrengthListener: PhoneStateListener? = null
     private var telephonyCallback: TelephonyCallback? = null
 
 
     private fun computeDbm(signalStrength: SignalStrength?): Double {
-        val cellInfos = signalStrength?.cellSignalStrengths ?: emptyList()
-
-        //TODO: make sure this average ever makes sense
-        return if (cellInfos.size > 0)
-            cellInfos.sumOf{ it.dbm } / cellInfos.size.toDouble()
-        else 0.0
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val cellInfos = signalStrength?.cellSignalStrengths ?: emptyList()
+            //TODO: make sure this average ever makes sense
+            return if (cellInfos.size > 0)
+                cellInfos.sumOf{ it.dbm } / cellInfos.size.toDouble()
+            else noSignalDbm
+        }
+        // legacy support
+        else {
+            return signalStrength?.cdmaDbm?.toDouble() ?: noSignalDbm
+        }
     }
 
     override fun startMonitoring(onStart: () -> Unit) {
