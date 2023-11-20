@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                         else if (inUseMonitor == MonitorType.WIFI)
                             WifiMonitoringScreen(context = this@MainActivity)
                         else
-                            LteMonitoringScreen()
+                            LteMonitoringScreen(context = this@MainActivity)
                     }
                 }
             }
