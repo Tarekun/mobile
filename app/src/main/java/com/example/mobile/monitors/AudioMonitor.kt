@@ -1,13 +1,15 @@
 package com.example.mobile.monitors
 
+import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
+import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(): IMonitor {
+class AudioMonitor(context: Context): IMonitor {
     private var audioRecorder: AudioRecord? = null
     private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -15,6 +17,7 @@ class AudioMonitor(): IMonitor {
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
+    private val dbManager = DbManager(context)
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
         const val defaultTimePeriodMs: Long = 1000
@@ -48,7 +51,15 @@ class AudioMonitor(): IMonitor {
         // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
         // reference: https://en.m.wikipedia.org/wiki/DBFS
         val rms = rootMeanSquared(buffer)
-        return decibelFromRms(rms)
+        val decibelValue = decibelFromRms(rms)
+        val classification = classifySignalStrength(decibelValue)
+
+        dbManager.storeAudioMeasurement(decibelValue, classification)
+        return decibelValue
+    }
+
+    override fun classifySignalStrength(dB: Double): Int {
+        return 0
     }
 
     private fun rootMeanSquared(values: ShortArray): Double {

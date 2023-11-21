@@ -11,4 +11,5 @@ interface IMonitor {
     fun startMonitoring(onStart: () -> Unit)
     fun stopMonitoring()
     fun readValue(): Double
+    fun classifySignalStrength(dB: Double): Int
 }
