@@ -6,6 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 
 private enum class MonitorVariant {
@@ -54,7 +57,6 @@ class DbManager(context: Context) {
     private var measurementDao: MeasurementDao = db.measurementDao()
 
     private fun storeMeasurement(decibels: Double, classification: Int, monitor: MonitorVariant) {
-        //TODO: this function should spawn a subroutine or something so as not to block the main thread
         var measurement = Measurement(
             0,
             decibels,
@@ -62,9 +64,14 @@ class DbManager(context: Context) {
             monitor.name,
             Date(System.currentTimeMillis())
         )
-//        val newRowId = withContext(Dispatchers.IO) {
-        measurementDao.insert(measurement)
-//        }
+
+        runInCoroutine { measurementDao.insert(measurement) }
+    }
+
+    private fun runInCoroutine(operation: () -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            operation()
+        }
     }
 
     fun storeAudioMeasurement(decibels: Double, classification: Int) {

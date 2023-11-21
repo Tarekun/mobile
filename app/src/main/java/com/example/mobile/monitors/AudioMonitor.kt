@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.example.mobile.database.DbManager
 import kotlin.math.log10
@@ -55,6 +56,11 @@ class AudioMonitor(context: Context): IMonitor {
         val classification = classifySignalStrength(decibelValue)
 
         dbManager.storeAudioMeasurement(decibelValue, classification)
+
+        val ms = dbManager.getAllMeasurements()
+        for (m in ms) {
+            Log.d("asd", "${m.id} ${m.signalStrength}")
+        }
         return decibelValue
     }
 
