@@ -4,8 +4,8 @@ import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.util.Log
 import androidx.annotation.RequiresPermission
+import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
@@ -56,16 +56,18 @@ class AudioMonitor(context: Context): IMonitor {
         val classification = classifySignalStrength(decibelValue)
 
         dbManager.storeAudioMeasurement(decibelValue, classification)
-
-        val ms = dbManager.getAllMeasurements()
-        for (m in ms) {
-            Log.d("asd", "${m.id} ${m.signalStrength}")
-        }
         return decibelValue
     }
 
-    override fun classifySignalStrength(dB: Double): Int {
-        return 0
+    override fun classifySignalStrength(dB: Double): Classification {
+        return when(dB) {
+            in 0.0..-3.0 -> Classification.MAX
+            in -3.0..-24.0 -> Classification.HIGH
+            in -24.0..-40.0 -> Classification.MEDIUM
+            in -40.0..-60.0 -> Classification.LOW
+            in -60.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            else -> Classification.INVALID
+        }
     }
 
     private fun rootMeanSquared(values: ShortArray): Double {

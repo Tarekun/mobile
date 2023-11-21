@@ -7,6 +7,7 @@ import android.telephony.SignalStrength
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyCallback.SignalStrengthsListener
 import android.telephony.TelephonyManager
+import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class LteMonitor(
@@ -84,7 +85,15 @@ class LteMonitor(
         return signalDbm
     }
 
-    override fun classifySignalStrength(dB: Double): Int {
-        return 0
+    override fun classifySignalStrength(dB: Double): Classification {
+        return when(dB) {
+            // in 50..65??
+            in 0.0..-65.0 -> Classification.MAX
+            in -65.0..-75.0 -> Classification.HIGH
+            in -75.0..-85.0 -> Classification.MEDIUM
+            in -85.0..-95.0 -> Classification.LOW
+            in -95.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            else -> Classification.INVALID
+        }
     }
 }

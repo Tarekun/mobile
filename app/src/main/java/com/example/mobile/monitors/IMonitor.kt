@@ -1,7 +1,9 @@
 package com.example.mobile.monitors
 
+import com.example.mobile.database.Classification
+
 interface IMonitor {
-    enum class MonitorType {
+    enum class MonitorVariant {
         AUDIO,
         WIFI,
         LTE
@@ -11,5 +13,5 @@ interface IMonitor {
     fun startMonitoring(onStart: () -> Unit)
     fun stopMonitoring()
     fun readValue(): Double
-    fun classifySignalStrength(dB: Double): Int
+    fun classifySignalStrength(dB: Double): Classification
 }

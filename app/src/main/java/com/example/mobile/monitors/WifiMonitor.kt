@@ -9,6 +9,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.provider.Settings
 import androidx.annotation.RequiresPermission
+import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class WifiMonitor(
@@ -114,7 +115,15 @@ class WifiMonitor(
         }
     }
 
-    override fun classifySignalStrength(dB: Double): Int {
-        return 0
+    override fun classifySignalStrength(dB: Double): Classification {
+        return when(dB) {
+            // in 30..50 ??
+            in 0.0..-45.0 -> Classification.MAX
+            in -45.0..-60.0 -> Classification.HIGH
+            in -60.0..-70.0 -> Classification.MEDIUM
+            in -70.0..-80.0 -> Classification.LOW
+            in -80.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            else -> Classification.INVALID
+        }
     }
 }
