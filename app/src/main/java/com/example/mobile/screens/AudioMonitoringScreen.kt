@@ -25,7 +25,7 @@ fun AudioMonitoringScreen(
     context: Activity
 ) {
     val audioMonitor by lazy {
-        AudioMonitor()
+        AudioMonitor(context)
     }
     var audioMonitoringJob: Job? by remember { mutableStateOf(null) }
     var value by remember { mutableStateOf(0.0) }

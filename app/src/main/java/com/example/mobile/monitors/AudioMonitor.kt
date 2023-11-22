@@ -1,13 +1,16 @@
 package com.example.mobile.monitors
 
+import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
+import com.example.mobile.database.Classification
+import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(): IMonitor {
+class AudioMonitor(context: Context): IMonitor {
     private var audioRecorder: AudioRecord? = null
     private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -15,6 +18,7 @@ class AudioMonitor(): IMonitor {
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
+    private val dbManager = DbManager(context)
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
         const val defaultTimePeriodMs: Long = 1000
@@ -48,7 +52,22 @@ class AudioMonitor(): IMonitor {
         // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
         // reference: https://en.m.wikipedia.org/wiki/DBFS
         val rms = rootMeanSquared(buffer)
-        return decibelFromRms(rms)
+        val decibelValue = decibelFromRms(rms)
+        val classification = classifySignalStrength(decibelValue)
+
+        dbManager.storeAudioMeasurement(decibelValue, classification)
+        return decibelValue
+    }
+
+    override fun classifySignalStrength(dB: Double): Classification {
+        return when(dB) {
+            in 0.0..-3.0 -> Classification.MAX
+            in -3.0..-24.0 -> Classification.HIGH
+            in -24.0..-40.0 -> Classification.MEDIUM
+            in -40.0..-60.0 -> Classification.LOW
+            in -60.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            else -> Classification.INVALID
+        }
     }
 
     private fun rootMeanSquared(values: ShortArray): Double {

@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.mobile.composables.ButtonVariant
 import com.example.mobile.composables.ParametrizedButton
-import com.example.mobile.monitors.IMonitor.MonitorType
+import com.example.mobile.monitors.IMonitor.MonitorVariant
 import com.example.mobile.screens.AudioMonitoringScreen
 import com.example.mobile.screens.LteMonitoringScreen
 import com.example.mobile.screens.WifiMonitoringScreen
@@ -28,8 +28,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        var inUseMonitor: MonitorType by mutableStateOf(MonitorType.AUDIO)
-        val monitors = listOf(MonitorType.AUDIO, MonitorType.WIFI, MonitorType.LTE)
+        var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
+        val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
 
         setContent {
             MobileTheme {
@@ -62,12 +62,11 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        if (inUseMonitor == MonitorType.AUDIO)
-                            AudioMonitoringScreen(context = this@MainActivity)
-                        else if (inUseMonitor == MonitorType.WIFI)
-                            WifiMonitoringScreen(context = this@MainActivity)
-                        else
-                            LteMonitoringScreen(context = this@MainActivity)
+                        when (inUseMonitor) {
+                            MonitorVariant.AUDIO -> AudioMonitoringScreen(context = this@MainActivity)
+                            MonitorVariant.WIFI -> WifiMonitoringScreen(context = this@MainActivity)
+                            MonitorVariant.LTE -> LteMonitoringScreen(context = this@MainActivity)
+                        }
                     }
                 }
             }
