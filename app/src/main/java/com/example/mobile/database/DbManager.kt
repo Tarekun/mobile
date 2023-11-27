@@ -41,10 +41,11 @@ private class Converters {
     }
 }
 
-@Database(entities = [Measurement::class], version = 2, exportSchema = false)
+@Database(entities = [Measurement::class, Settings::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun measurementDao(): MeasurementDao
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
         @Volatile
@@ -67,6 +68,7 @@ abstract class AppDatabase : RoomDatabase() {
 class DbManager(context: Context) {
     private var db: AppDatabase = AppDatabase.getDatabase(context)
     private var measurementDao: MeasurementDao = db.measurementDao()
+    private var settingsDao: SettingsDao = db.settingsDao()
 
     private fun storeMeasurement(
         decibels: Double,
@@ -104,5 +106,30 @@ class DbManager(context: Context) {
 
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
+    }
+
+    fun findPeriodForMonitor(variant: MonitorVariant): Int? {
+        val intervalSetting = settingsDao.findByName(
+            when (variant) {
+                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+            }
+        )
+
+        return intervalSetting?.value?.toInt()
+    }
+
+    fun updatePeriodForMonitor(variant: MonitorVariant, period: Long) {
+        val setting = Settings(
+            //name selection
+            when (variant) {
+                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+            },
+            period.toString()
+        )
+        runInCoroutine { settingsDao.update(setting) }
     }
 }

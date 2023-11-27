@@ -15,13 +15,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.mobile.composables.ButtonVariant
 import com.example.mobile.composables.ParametrizedButton
+import com.example.mobile.monitors.AudioMonitor
+import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.IMonitor.MonitorVariant
-import com.example.mobile.screens.AudioMonitoringScreen
-import com.example.mobile.screens.LteMonitoringScreen
-import com.example.mobile.screens.WifiMonitoringScreen
+import com.example.mobile.screens.MonitoringScreen
+import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
+    val audioMonitor by lazy {
+        AudioMonitor(applicationContext)
+    }
+    val wifiMonitor by lazy {
+        WifiMonitor(this, applicationContext)
+    }
+    val lteMonitor by lazy {
+        LteMonitor(applicationContext)
+    }
 
     // TopAppBar è ancora in modalità experimental
     @OptIn(ExperimentalMaterial3Api::class)
@@ -63,9 +73,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         when (inUseMonitor) {
-                            MonitorVariant.AUDIO -> AudioMonitoringScreen(context = this@MainActivity)
-                            MonitorVariant.WIFI -> WifiMonitoringScreen(context = this@MainActivity)
-                            MonitorVariant.LTE -> LteMonitoringScreen(context = this@MainActivity)
+                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
+                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
+                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
                         }
                     }
                 }

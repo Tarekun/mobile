@@ -10,7 +10,7 @@ import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(context: Context): IMonitor {
+class AudioMonitor(private val context: Context): IMonitor {
     private var audioRecorder: AudioRecord? = null
     private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -19,6 +19,8 @@ class AudioMonitor(context: Context): IMonitor {
         AudioFormat.ENCODING_PCM_16BIT
     )
     private val dbManager = DbManager(context)
+    override val variant: IMonitor.MonitorVariant
+        get() = IMonitor.MonitorVariant.AUDIO
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
         const val defaultTimePeriodMs: Long = 1000
@@ -84,4 +86,5 @@ class AudioMonitor(context: Context): IMonitor {
         // reference: https://en.wikipedia.org/wiki/Decibel#Uses
         return 20 * log10(rms / maxPossibleAmplitude)
     }
+
 }

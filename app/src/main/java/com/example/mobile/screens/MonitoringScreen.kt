@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,41 +13,49 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import com.example.mobile.composables.Content
-import com.example.mobile.monitors.AudioMonitor
-import com.example.mobile.monitors.LteMonitor
+import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.IMonitor
+import com.example.mobile.monitors.IMonitor.MonitorVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@Composable
-fun LteMonitoringScreen(
-    context: Activity
-) {
-    val lteMonitor by lazy {
-        LteMonitor(context)
+fun permissionForMonitor(variant: MonitorVariant): String {
+    return when (variant) {
+        MonitorVariant.AUDIO -> Manifest.permission.RECORD_AUDIO
+        MonitorVariant.WIFI -> Manifest.permission.ACCESS_FINE_LOCATION
+        MonitorVariant.LTE -> Manifest.permission.READ_PHONE_STATE
     }
-    var lteMonitoringJob: Job? by remember { mutableStateOf(null) }
-    var value by remember { mutableStateOf(0.0) }
+}
 
-    @RequiresPermission("android.permission.RECORD_AUDIO")
+@Composable
+fun MonitoringScreen(
+    context: Activity,
+    monitor: IMonitor
+) {
+    var monitoringJob: Job? by remember { mutableStateOf(null) }
+    var value: Double by remember { mutableStateOf(0.0) }
+    var periodMs: Long by remember { mutableStateOf(1000) }
+    val dbManager = DbManager(context)
+
     fun startRoutine() {
         // aggiunto così l'ide non si lamenta della chiamata a `readValue` nella coroutine
         if (ActivityCompat.checkSelfPermission(
                 context,
-                Manifest.permission.READ_PHONE_STATE
+                Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             return
         }
 
         value = 0.0
-        lteMonitor.startMonitoring {
-            lteMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
+        monitor.startMonitoring {
+            monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = lteMonitor.readValue()
-                    delay(1000)
+                    value = monitor.readValue()
+                    delay(periodMs)
                 }
             }
         }
@@ -68,20 +75,29 @@ fun LteMonitoringScreen(
     fun startMonitoring() {
         if (ActivityCompat.checkSelfPermission(
                 context,
-                Manifest.permission.READ_PHONE_STATE
+                permissionForMonitor(monitor.variant)
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            permissionRequestLauncher.launch(Manifest.permission.READ_PHONE_STATE)
-        } else {
+            permissionRequestLauncher.launch(permissionForMonitor(monitor.variant))
+        }
+        else {
             startRoutine()
         }
 
     }
 
     fun stopMonitoring() {
-        lteMonitoringJob?.cancel()
-        lteMonitor.stopMonitoring()
+        monitoringJob?.cancel()
+        monitor.stopMonitoring()
         value = 0.0
+    }
+
+    fun updateMonitoringPeriod(newPeriod: Long) {
+        require(newPeriod > 0) {
+            "`updateMonitoringPeriod` argument `newPeriod` should be positive, was $newPeriod instead"
+        }
+        dbManager.updatePeriodForMonitor(monitor.variant, newPeriod)
+        periodMs = newPeriod
     }
 
     Content(
@@ -91,5 +107,7 @@ fun LteMonitoringScreen(
         },
         stop = {
             stopMonitoring()
-        })
+        },
+        onPeriodUpdate = { updateMonitoringPeriod(it) }
+    )
 }

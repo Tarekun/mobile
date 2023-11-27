@@ -11,7 +11,7 @@ import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class LteMonitor(
-    context: Context
+    private val context: Context
 ): IMonitor {
     private val telephonyManager: TelephonyManager =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -19,9 +19,10 @@ class LteMonitor(
     private val noSignalDbm = Double.NEGATIVE_INFINITY
     private val dbManager = DbManager(context)
 
-    private val context = context
     private var signalStrengthListener: PhoneStateListener? = null
     private var telephonyCallback: TelephonyCallback? = null
+    override val variant: IMonitor.MonitorVariant
+        get() = IMonitor.MonitorVariant.LTE
 
 
     private fun computeDbm(signalStrength: SignalStrength?): Double {
@@ -96,4 +97,5 @@ class LteMonitor(
             else -> Classification.INVALID
         }
     }
+
 }

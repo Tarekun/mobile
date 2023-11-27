@@ -13,17 +13,17 @@ import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class WifiMonitor(
-    activity: Activity,
+    private val activity: Activity,
     // importante che sia proprio l'applicationContext e non un Context derivato per release <=
     // Build.VERSION_CODES.N, tanto vale usare sempre questo di default se non ci causa problemi
     // reference: https://developer.android.com/reference/android/net/wifi/WifiManager
-    applicationContext: Context
+    private val applicationContext: Context
 ): IMonitor {
-    private val applicationContext = applicationContext
-    private val activity = activity
     private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val dbManager = DbManager(applicationContext)
+    override val variant: IMonitor.MonitorVariant
+        get() = IMonitor.MonitorVariant.WIFI
 
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
@@ -126,4 +126,5 @@ class WifiMonitor(
             else -> Classification.INVALID
         }
     }
+
 }
