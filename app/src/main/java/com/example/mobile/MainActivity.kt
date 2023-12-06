@@ -15,11 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.mobile.composables.ButtonVariant
 import com.example.mobile.composables.ParametrizedButton
-import com.example.mobile.monitors.AudioMonitor
-import com.example.mobile.monitors.LteMonitor
-import com.example.mobile.monitors.IMonitor.MonitorVariant
-import com.example.mobile.screens.MonitoringScreen
-import com.example.mobile.monitors.WifiMonitor
+import com.example.mobile.monitors.MonitorVariant
+import com.example.mobile.screens.AudioMonitoringScreen
+import com.example.mobile.screens.LteMonitoringScreen
+import com.example.mobile.screens.WifiMonitoringScreen
 import com.example.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
