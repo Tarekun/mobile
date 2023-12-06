@@ -110,7 +110,7 @@ class WifiMonitor(
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
             val classification = classifySignalStrength(averageSignalStrength)
 
-            dbManager.storeAudioMeasurement(averageSignalStrength, classification)
+            dbManager.storeWifiMeasurement(averageSignalStrength, classification)
             return averageSignalStrength
         }
     }
@@ -118,11 +118,11 @@ class WifiMonitor(
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
             // in 30..50 ??
-            in 0.0..-45.0 -> Classification.MAX
-            in -45.0..-60.0 -> Classification.HIGH
-            in -60.0..-70.0 -> Classification.MEDIUM
-            in -70.0..-80.0 -> Classification.LOW
-            in -80.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -45.0..0.0 -> Classification.MAX
+            in -60.0..-45.0 -> Classification.HIGH
+            in -70.0..-60.0 -> Classification.MEDIUM
+            in -80.0..-70.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-80.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }

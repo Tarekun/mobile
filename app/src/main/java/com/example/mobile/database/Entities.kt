@@ -3,6 +3,7 @@ package com.example.mobile.database
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Update
@@ -50,12 +51,12 @@ interface SettingsDao {
     enum class SettingsNames {
         AUDIO_MONITOR_PERIOD,WIFI_MONITOR_PERIOD,LTE_MONITOR_PERIOD
     }
-    @Insert
-    fun insert(measurement: Settings)
-
     @Query("SELECT * FROM settings WHERE name = :name")
     fun findByName(name: String): Settings?
 
-    @Update
-    fun update(settings: Settings)
+    @Query("SELECT * FROM settings")
+    fun getAllSettings(): List<Settings>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertOrUpdateSetting(setting: Settings)
 }

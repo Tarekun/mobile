@@ -1,6 +1,7 @@
 package com.example.mobile.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -10,6 +11,7 @@ import com.example.mobile.monitors.IMonitor.MonitorVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 
 private class Converters {
@@ -83,13 +85,7 @@ class DbManager(context: Context) {
             Date(System.currentTimeMillis())
         )
 
-        runInCoroutine { measurementDao.insert(measurement) }
-    }
-
-    private fun runInCoroutine(operation: () -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            operation()
-        }
+         measurementDao.insert(measurement)
     }
 
     fun storeAudioMeasurement(decibels: Double, classification: Classification) {
@@ -108,7 +104,7 @@ class DbManager(context: Context) {
         return measurementDao.getAllMeasurements()
     }
 
-    fun findPeriodForMonitor(variant: MonitorVariant): Int? {
+    fun findPeriodForMonitor(variant: MonitorVariant): Long? {
         val intervalSetting = settingsDao.findByName(
             when (variant) {
                 MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
@@ -117,7 +113,7 @@ class DbManager(context: Context) {
             }
         )
 
-        return intervalSetting?.value?.toInt()
+        return intervalSetting?.value?.toLong()
     }
 
     fun updatePeriodForMonitor(variant: MonitorVariant, period: Long) {
@@ -130,6 +126,10 @@ class DbManager(context: Context) {
             },
             period.toString()
         )
-        runInCoroutine { settingsDao.update(setting) }
+        settingsDao.insertOrUpdateSetting(setting)
+    }
+
+    fun findSettingByName(name: String): Settings? {
+        return settingsDao.findByName(name)
     }
 }

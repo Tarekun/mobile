@@ -5,7 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -23,6 +29,9 @@ import androidx.compose.ui.Modifier
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
+val min = 1
+val max = 240
+
 @Composable
 fun Content(
     currentVolume: Double,
@@ -32,7 +41,7 @@ fun Content(
     modifier: Modifier = Modifier
 ) {
     val twoDecimalValue = (currentVolume * 100.0).roundToInt() / 100.0
-    var periodMs by remember { mutableLongStateOf(1) }
+    var period: Long by remember { mutableLongStateOf(1) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -43,14 +52,20 @@ fun Content(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     Slider(
-                        value = periodMs.toFloat(),
+                        value = period.toFloat(),
                         steps = 1400 / 5,
-                        onValueChange = { periodMs = it.roundToLong() },
-                        valueRange = 1f..1440f,
+                        onValueChange = { period = it.roundToLong() },
+                        valueRange = min.toFloat()..max.toFloat(),
                     )
-                    Text(text = "$periodMs", modifier = modifier)
+                    IconButton(onClick = { if(period < max) period += 1 }) {
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Favorite")
+                    }
+                    IconButton(onClick = { if(period > min) period -= 1 }) {
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Favorite")
+                    }
+                    Text(text = "$period", modifier = modifier)
                 }
-                Button(onClick = { onPeriodUpdate(periodMs) }) {
+                Button(onClick = { onPeriodUpdate(period * 60 * 1000) }) {
                     Text(text = "Update period")
                 }
             }

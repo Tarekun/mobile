@@ -63,11 +63,11 @@ class AudioMonitor(private val context: Context): IMonitor {
 
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
-            in 0.0..-3.0 -> Classification.MAX
-            in -3.0..-24.0 -> Classification.HIGH
-            in -24.0..-40.0 -> Classification.MEDIUM
-            in -40.0..-60.0 -> Classification.LOW
-            in -60.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -3.0..0.0 -> Classification.MAX
+            in -24.0..-3.0 -> Classification.HIGH
+            in -40.0..-24.0 -> Classification.MEDIUM
+            in -60.0..-40.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-60.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }

@@ -82,18 +82,18 @@ class LteMonitor(
     override fun readValue(): Double {
         val decibelValue = signalDbm
         val classification = classifySignalStrength(decibelValue)
-        dbManager.storeAudioMeasurement(decibelValue, classification)
+        dbManager.storeMobileMeasurement(decibelValue, classification)
         return signalDbm
     }
 
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
             // in 50..65??
-            in 0.0..-65.0 -> Classification.MAX
-            in -65.0..-75.0 -> Classification.HIGH
-            in -75.0..-85.0 -> Classification.MEDIUM
-            in -85.0..-95.0 -> Classification.LOW
-            in -95.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -65.0..0.0 -> Classification.MAX
+            in -75.0..-65.0 -> Classification.HIGH
+            in -85.0..-75.0 -> Classification.MEDIUM
+            in -95.0..-85.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-95.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }
