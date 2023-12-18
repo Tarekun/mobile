@@ -18,7 +18,7 @@ import com.example.mobile.composables.Content
 import com.example.mobile.database.DbManager
 import com.example.mobile.database.SettingsDao
 import com.example.mobile.monitors.IMonitor
-import com.example.mobile.monitors.IMonitor.MonitorVariant
+import com.example.mobile.monitors.MonitorVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

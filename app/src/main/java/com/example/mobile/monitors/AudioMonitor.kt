@@ -10,55 +10,66 @@ import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(private val context: Context): IMonitor {
+class AudioMonitor(context: Context): Monitor(context) {
     private var audioRecorder: AudioRecord? = null
-    private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
         sampleFrequency,
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
-    private val dbManager = DbManager(context)
-    override val variant: IMonitor.MonitorVariant
-        get() = IMonitor.MonitorVariant.AUDIO
     companion object {
-        // periodo di esecuzione delle misurazioni suggerito
-        const val defaultTimePeriodMs: Long = 1000
         // massima ampiezza possibile con un encoding a 16bit
         const val maxPossibleAmplitude: Double = 32767.0
+        const val sampleFrequency = 44100
     }
 
     @RequiresPermission(value = "android.permission.RECORD_AUDIO")
-    override fun startMonitoring(onStart: () -> Unit) {
-        audioRecorder = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleFrequency,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            bufferSize
+    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
+        return checkStateOrFail(
+            MonitorState.CREATED,
+            {
+                audioRecorder = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleFrequency,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                )
+                audioRecorder?.startRecording()
+                onStart()
+                true
+            }
         )
-        audioRecorder?.startRecording()
-        onStart()
     }
 
-    override fun stopMonitoring() {
-        //TODO: maybe protect this function so that it throws if start wasn't called yet
-        audioRecorder?.stop()
-        audioRecorder?.release()
-        audioRecorder = null
+    override fun doStopMonitoring(): Boolean {
+        return checkStateOrFail(
+            MonitorState.STARTED,
+            {
+                audioRecorder?.stop()
+                audioRecorder?.release()
+                audioRecorder = null
+                true
+            }
+        )
     }
 
     override fun readValue(): Double {
-        val buffer = ShortArray(bufferSize)
-        audioRecorder?.read(buffer, 0, bufferSize)
-        // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
-        // reference: https://en.m.wikipedia.org/wiki/DBFS
-        val rms = rootMeanSquared(buffer)
-        val decibelValue = decibelFromRms(rms)
-        val classification = classifySignalStrength(decibelValue)
+        return checkStateOrFail(
+            MonitorState.STARTED,
+            {
+                val buffer = ShortArray(bufferSize)
+                audioRecorder?.read(buffer, 0, bufferSize)
+                // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
+                // reference: https://en.m.wikipedia.org/wiki/DBFS
+                val rms = rootMeanSquared(buffer)
+                val decibelValue = decibelFromRms(rms)
+                val classification = classifySignalStrength(decibelValue)
 
-        dbManager.storeAudioMeasurement(decibelValue, classification)
-        return decibelValue
+                dbManager.storeAudioMeasurement(decibelValue, classification)
+                decibelValue
+            }
+        )
     }
 
     override fun classifySignalStrength(dB: Double): Classification {
