@@ -10,27 +10,22 @@ import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(private val context: Context): Monitor() {
+class AudioMonitor(context: Context): Monitor(context) {
     private var audioRecorder: AudioRecord? = null
-    private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
         sampleFrequency,
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
-    private val dbManager = DbManager(context)
-    override val variant: IMonitor.MonitorVariant
-        get() = IMonitor.MonitorVariant.AUDIO
     companion object {
-        // periodo di esecuzione delle misurazioni suggerito
-        const val defaultTimePeriodMs: Long = 1000
         // massima ampiezza possibile con un encoding a 16bit
         const val maxPossibleAmplitude: Double = 32767.0
+        const val sampleFrequency = 44100
     }
 
     @RequiresPermission(value = "android.permission.RECORD_AUDIO")
-    override fun doStartMonitoring(onStart: () -> Unit) {
-        checkStateOrFail(
+    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
+        return checkStateOrFail(
             MonitorState.CREATED,
             {
                 audioRecorder = AudioRecord(
@@ -42,18 +37,19 @@ class AudioMonitor(private val context: Context): Monitor() {
                 )
                 audioRecorder?.startRecording()
                 onStart()
+                true
             }
         )
     }
 
-    override fun doStopMonitoring() {
-        checkStateOrFail(
+    override fun doStopMonitoring(): Boolean {
+        return checkStateOrFail(
             MonitorState.STARTED,
             {
-                //TODO: maybe protect this function so that it throws if start wasn't called yet
                 audioRecorder?.stop()
                 audioRecorder?.release()
                 audioRecorder = null
+                true
             }
         )
     }

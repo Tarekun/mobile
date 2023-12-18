@@ -11,25 +11,24 @@ import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class LteMonitor(
-    private val context: Context
-): Monitor() {
+    context: Context
+): Monitor(context) {
     private val telephonyManager: TelephonyManager =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     private var signalDbm: Double = 0.0
-    private val noSignalDbm = Double.NEGATIVE_INFINITY
-    private val dbManager = DbManager(context)
-
     private var signalStrengthListener: PhoneStateListener? = null
     private var telephonyCallback: TelephonyCallback? = null
-    override val variant: IMonitor.MonitorVariant
-        get() = IMonitor.MonitorVariant.LTE
+
+    companion object {
+        const val noSignalDbm = Double.NEGATIVE_INFINITY
+    }
 
 
     private fun computeDbm(signalStrength: SignalStrength?): Double {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val cellInfos = signalStrength?.cellSignalStrengths ?: emptyList()
             //TODO: make sure this average ever makes sense
-            return if (cellInfos.size > 0)
+            return if (cellInfos.isNotEmpty())
                 cellInfos.sumOf{ it.dbm } / cellInfos.size.toDouble()
             else noSignalDbm
         }
@@ -39,8 +38,8 @@ class LteMonitor(
         }
     }
 
-    override fun doStartMonitoring(onStart: () -> Unit) {
-        checkStateOrFail(
+    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
+        return checkStateOrFail(
             MonitorState.CREATED,
             {
                 // da Build.VERSION_CODES.S TelephonyManager#listen diventa deprecata e
@@ -73,12 +72,13 @@ class LteMonitor(
                 }
 
                 onStart()
+                true
             }
         )
     }
 
-    override fun doStopMonitoring() {
-        checkStateOrFail(
+    override fun doStopMonitoring(): Boolean {
+        return checkStateOrFail(
             MonitorState.STARTED,
             {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -89,6 +89,9 @@ class LteMonitor(
                         telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE)
                     }
                 }
+                signalStrengthListener = null
+                telephonyCallback = null
+                true
             }
         )
     }

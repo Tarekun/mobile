@@ -17,18 +17,12 @@ class WifiMonitor(
     // importante che sia proprio l'applicationContext e non un Context derivato per release <=
     // Build.VERSION_CODES.N, tanto vale usare sempre questo di default se non ci causa problemi
     // reference: https://developer.android.com/reference/android/net/wifi/WifiManager
-    private val applicationContext: Context
-): Monitor() {
-    private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    private val dbManager = DbManager(applicationContext)
-    override val variant: IMonitor.MonitorVariant
-        get() = IMonitor.MonitorVariant.WIFI
-
-    companion object {
-        // periodo di esecuzione delle misurazioni suggerito
-        const val defaultTimePeriodMs: Long = 60000
-    }
+    applicationContext: Context
+): Monitor(applicationContext) {
+    private val wifiManager =
+        applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private val locationManager =
+        applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     private fun isWifiEnabled(): Boolean {
         return wifiManager.isWifiEnabled
@@ -68,8 +62,8 @@ class WifiMonitor(
     }
 
     @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
-    override fun doStartMonitoring(onStart: () -> Unit) {
-        checkStateOrFail(
+    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
+        return checkStateOrFail(
             MonitorState.CREATED,
             {
                 //TODO: add strings resources to avoid these hard coded strings
@@ -80,7 +74,9 @@ class WifiMonitor(
                         "In order to monitor the strength of wifi connections in your area you need to turn wifi connectivity",
                         wifiIntent
                     )
-                } else if (!isLocationEnabled()) {
+                    false
+                }
+                else if (!isLocationEnabled()) {
                     val locationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     requestSettingEnabled(
                         "Enable location",
@@ -89,17 +85,20 @@ class WifiMonitor(
                                 "the device is located. This does not mean that the application will check the device's location.",
                         locationIntent
                     )
+                    false
                 }
-                if (isWifiEnabled() && isLocationEnabled()) {
+                // (isWifiEnabled() && isLocationEnabled())
+                else {
                     onStart()
+                    true
                 }
             }
         )
     }
 
-    override fun doStopMonitoring() {
-        checkStateOrFail(MonitorState.STARTED, {
-
+    override fun doStopMonitoring(): Boolean {
+        return checkStateOrFail(MonitorState.STARTED, {
+            true
         })
     }
 
