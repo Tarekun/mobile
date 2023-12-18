@@ -10,7 +10,7 @@ import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-class AudioMonitor(context: Context): IMonitor {
+class AudioMonitor(private val context: Context): IMonitor {
     private var audioRecorder: AudioRecord? = null
     private val sampleFrequency = 44100
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -19,6 +19,8 @@ class AudioMonitor(context: Context): IMonitor {
         AudioFormat.ENCODING_PCM_16BIT
     )
     private val dbManager = DbManager(context)
+    override val variant: IMonitor.MonitorVariant
+        get() = IMonitor.MonitorVariant.AUDIO
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
         const val defaultTimePeriodMs: Long = 1000
@@ -61,11 +63,11 @@ class AudioMonitor(context: Context): IMonitor {
 
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
-            in 0.0..-3.0 -> Classification.MAX
-            in -3.0..-24.0 -> Classification.HIGH
-            in -24.0..-40.0 -> Classification.MEDIUM
-            in -40.0..-60.0 -> Classification.LOW
-            in -60.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -3.0..0.0 -> Classification.MAX
+            in -24.0..-3.0 -> Classification.HIGH
+            in -40.0..-24.0 -> Classification.MEDIUM
+            in -60.0..-40.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-60.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }
@@ -84,4 +86,5 @@ class AudioMonitor(context: Context): IMonitor {
         // reference: https://en.wikipedia.org/wiki/Decibel#Uses
         return 20 * log10(rms / maxPossibleAmplitude)
     }
+
 }

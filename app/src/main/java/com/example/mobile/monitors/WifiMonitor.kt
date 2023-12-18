@@ -13,17 +13,17 @@ import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
 class WifiMonitor(
-    activity: Activity,
+    private val activity: Activity,
     // importante che sia proprio l'applicationContext e non un Context derivato per release <=
     // Build.VERSION_CODES.N, tanto vale usare sempre questo di default se non ci causa problemi
     // reference: https://developer.android.com/reference/android/net/wifi/WifiManager
-    applicationContext: Context
+    private val applicationContext: Context
 ): IMonitor {
-    private val applicationContext = applicationContext
-    private val activity = activity
     private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val dbManager = DbManager(applicationContext)
+    override val variant: IMonitor.MonitorVariant
+        get() = IMonitor.MonitorVariant.WIFI
 
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
@@ -110,7 +110,7 @@ class WifiMonitor(
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
             val classification = classifySignalStrength(averageSignalStrength)
 
-            dbManager.storeAudioMeasurement(averageSignalStrength, classification)
+            dbManager.storeWifiMeasurement(averageSignalStrength, classification)
             return averageSignalStrength
         }
     }
@@ -118,12 +118,13 @@ class WifiMonitor(
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
             // in 30..50 ??
-            in 0.0..-45.0 -> Classification.MAX
-            in -45.0..-60.0 -> Classification.HIGH
-            in -60.0..-70.0 -> Classification.MEDIUM
-            in -70.0..-80.0 -> Classification.LOW
-            in -80.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -45.0..0.0 -> Classification.MAX
+            in -60.0..-45.0 -> Classification.HIGH
+            in -70.0..-60.0 -> Classification.MEDIUM
+            in -80.0..-70.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-80.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }
+
 }

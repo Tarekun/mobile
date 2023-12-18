@@ -3,8 +3,10 @@ package com.example.mobile.database
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Update
 import com.example.mobile.monitors.IMonitor
 import java.util.Date
 
@@ -35,4 +37,26 @@ interface MeasurementDao {
 
     @Query("SELECT * FROM measurement")
     fun getAllMeasurements(): List<Measurement>
+}
+
+@Entity(tableName = "settings")
+data class Settings(
+    @PrimaryKey
+    val name: String,
+    val value: String
+)
+
+@Dao
+interface SettingsDao {
+    enum class SettingsNames {
+        AUDIO_MONITOR_PERIOD,WIFI_MONITOR_PERIOD,LTE_MONITOR_PERIOD
+    }
+    @Query("SELECT * FROM settings WHERE name = :name")
+    fun findByName(name: String): Settings?
+
+    @Query("SELECT * FROM settings")
+    fun getAllSettings(): List<Settings>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertOrUpdateSetting(setting: Settings)
 }

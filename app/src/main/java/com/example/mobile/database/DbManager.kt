@@ -1,6 +1,7 @@
 package com.example.mobile.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -10,6 +11,7 @@ import com.example.mobile.monitors.IMonitor.MonitorVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 
 private class Converters {
@@ -41,10 +43,11 @@ private class Converters {
     }
 }
 
-@Database(entities = [Measurement::class], version = 2, exportSchema = false)
+@Database(entities = [Measurement::class, Settings::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun measurementDao(): MeasurementDao
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
         @Volatile
@@ -67,6 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
 class DbManager(context: Context) {
     private var db: AppDatabase = AppDatabase.getDatabase(context)
     private var measurementDao: MeasurementDao = db.measurementDao()
+    private var settingsDao: SettingsDao = db.settingsDao()
 
     private fun storeMeasurement(
         decibels: Double,
@@ -81,13 +85,7 @@ class DbManager(context: Context) {
             Date(System.currentTimeMillis())
         )
 
-        runInCoroutine { measurementDao.insert(measurement) }
-    }
-
-    private fun runInCoroutine(operation: () -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            operation()
-        }
+         measurementDao.insert(measurement)
     }
 
     fun storeAudioMeasurement(decibels: Double, classification: Classification) {
@@ -104,5 +102,34 @@ class DbManager(context: Context) {
 
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
+    }
+
+    fun findPeriodForMonitor(variant: MonitorVariant): Long? {
+        val intervalSetting = settingsDao.findByName(
+            when (variant) {
+                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+            }
+        )
+
+        return intervalSetting?.value?.toLong()
+    }
+
+    fun updatePeriodForMonitor(variant: MonitorVariant, period: Long) {
+        val setting = Settings(
+            //name selection
+            when (variant) {
+                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+            },
+            period.toString()
+        )
+        settingsDao.insertOrUpdateSetting(setting)
+    }
+
+    fun findSettingByName(name: String): Settings? {
+        return settingsDao.findByName(name)
     }
 }
