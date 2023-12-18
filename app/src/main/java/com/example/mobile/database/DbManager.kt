@@ -1,18 +1,15 @@
 package com.example.mobile.database
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.example.mobile.monitors.MonitorVariant
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Date
+
+const val DATABASE_NAME = "mydatabase.db"
 
 private class Converters {
     @TypeConverter
@@ -58,7 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mydatabase.db"
+                    DATABASE_NAME
                 ).build()
                 INSTANCE = instance
                 instance

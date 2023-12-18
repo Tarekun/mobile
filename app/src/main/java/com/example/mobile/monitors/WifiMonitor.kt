@@ -9,6 +9,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.provider.Settings
 import androidx.annotation.RequiresPermission
+import com.example.mobile.R
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 
@@ -66,12 +67,11 @@ class WifiMonitor(
         return checkStateOrFail(
             MonitorState.CREATED,
             {
-                //TODO: add strings resources to avoid these hard coded strings
                 if (!isWifiEnabled()) {
                     val wifiIntent = Intent(Settings.ACTION_WIFI_SETTINGS)
                     requestSettingEnabled(
-                        "Enable Wifi connection",
-                        "In order to monitor the strength of wifi connections in your area you need to turn wifi connectivity",
+                        context.getString(R.string.enable_wifi_dialog_title),
+                        context.getString(R.string.enable_wifi_dialog_content),
                         wifiIntent
                     )
                     false
@@ -79,10 +79,8 @@ class WifiMonitor(
                 else if (!isLocationEnabled()) {
                     val locationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     requestSettingEnabled(
-                        "Enable location",
-                        "In order to monitor the strength of wifi connections android also requires to turn on the location.\n" +
-                                "This is because if you monitor the available wifi connection you could get a good approximation of where " +
-                                "the device is located. This does not mean that the application will check the device's location.",
+                        context.getString(R.string.enable_location_dialog_title),
+                        context.getString(R.string.enable_location_dialog_content),
                         locationIntent
                     )
                     false

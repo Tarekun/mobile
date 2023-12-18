@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">mobile</string>
+    <string name="enable_wifi_dialog_title">Enable Wifi connection</string>
+    <string name="enable_wifi_dialog_content">In order to monitor the strength of wifi connections in your area you need to turn on wifi connectivity</string>
+    <string name="enable_location_dialog_title">Enable location</string>
+    <string name="enable_location_dialog_content">In order to monitor the strength of wifi connections Android also requires to turn on the location.\nThis is because if you monitor the available wifi connection you could get a good approximation of where the device is located. This does not mean that the application will check the device\'s location.</string>
 </resources>
