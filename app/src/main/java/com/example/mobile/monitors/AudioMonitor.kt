@@ -6,6 +6,9 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
 import com.example.mobile.database.Classification
+import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 import kotlin.math.log10
 import kotlin.math.sqrt
 

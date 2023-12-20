@@ -11,6 +11,9 @@ import android.provider.Settings
 import androidx.annotation.RequiresPermission
 import com.example.mobile.R
 import com.example.mobile.database.Classification
+import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 
 class WifiMonitor(
     private val activity: Activity,
