@@ -65,6 +65,7 @@ data class SettingsTable(
     val notifyOnlyAboveLength: Int = 10,
     val notificationPeriodMs: Long = 24 * 60 * 60 * 1000,
     val lastNotification: Instant = Instant.fromEpochMilliseconds(0),
+    val includeExternal: Boolean = true,
 )
 
 object SettingsUtils {

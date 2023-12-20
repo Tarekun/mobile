@@ -35,6 +35,7 @@ import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.misc.LocationManager
+import com.example.mobile.database.SettingsTable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -53,11 +54,12 @@ fun permissionForMonitor(variant: MonitorVariant): String {
 @Composable
 fun MonitoringScreen(
     context: Activity,
-    monitor: Monitor
+    monitor: Monitor,
+    navigateTo: (screen: Screens) -> Unit
 ) {
     var monitoringJob: Job? by remember { mutableStateOf(null) }
     var value: Double by remember { mutableStateOf(0.0) }
-    var showMap: Boolean by remember { mutableStateOf(false) }
+    var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
     var initializing by remember { mutableStateOf(true) }
     var measurementsNumber: Int by remember { mutableStateOf(0) }
@@ -65,10 +67,11 @@ fun MonitoringScreen(
 
     LaunchedEffect(monitor.variant) {
         withContext(Dispatchers.IO) {
+            settings = SettingsUtils.storedSettings
             monitorSettings = when(monitor.variant) {
-                MonitorVariant.AUDIO -> SettingsUtils.storedSettings.audio
-                MonitorVariant.WIFI -> SettingsUtils.storedSettings.wifi
-                MonitorVariant.LTE -> SettingsUtils.storedSettings.lte
+                MonitorVariant.AUDIO -> settings!!.audio
+                MonitorVariant.WIFI -> settings!!.wifi
+                MonitorVariant.LTE -> settings!!.lte
             }
 
             measurementsNumber = MeasurementsUtils.countLocalMeasurements(monitor.variant)
@@ -192,9 +195,9 @@ fun MonitoringScreen(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(
-                onClick = { showMap = !showMap },
+                onClick = { navigateTo(Screens.MAP_SCREEN) },
             ) {
-                Text(text = "${if (showMap) "Hide" else "Show"} map")
+                Text(text = "Open map")
             }
         }
     }
