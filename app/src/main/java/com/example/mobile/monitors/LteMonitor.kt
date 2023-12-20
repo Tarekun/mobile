@@ -8,6 +8,9 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyCallback.SignalStrengthsListener
 import android.telephony.TelephonyManager
 import com.example.mobile.database.Classification
+import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 
 class LteMonitor(
     context: Context

@@ -29,6 +29,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"AIzaSyAJOjAfauHwGFulbJILXrv09ct3J6fd6jI\"")
+
     }
 
     buildTypes {
@@ -46,6 +48,8 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
@@ -83,6 +87,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("com.google.android.gms:play-services-nearby:19.1.0")

@@ -38,6 +38,7 @@ import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
+import com.example.mobile.screens.MapActivity
 import com.example.mobile.ui.theme.MobileTheme
 import java.util.concurrent.TimeUnit
 
@@ -85,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
-        val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
+        val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE, MonitorVariant.MAP)
 
         val history = NavigationHistory(currentScreen)
         fun navigateTo(screen: Screens) {
@@ -152,7 +153,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                     ) {
-                        when (currentScreen) {
+                        if (inUseMonitor == MonitorVariant.MAP) {
+                            MapActivity()
+                        } 
+                        else when (currentScreen) {
                             Screens.MONITORING ->
                                 MonitoringScreen(
                                     context = this@MainActivity,
