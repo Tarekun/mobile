@@ -7,6 +7,8 @@ import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 import kotlin.math.log10
 import kotlin.math.sqrt
 
@@ -18,6 +20,7 @@ class AudioMonitor(context: Context): IMonitor {
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
+
     private val dbManager = DbManager(context)
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
@@ -46,7 +49,7 @@ class AudioMonitor(context: Context): IMonitor {
         audioRecorder = null
     }
 
-    override fun readValue(): Double {
+    override fun readValue(context: Context): Double {
         val buffer = ShortArray(bufferSize)
         audioRecorder?.read(buffer, 0, bufferSize)
         // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
@@ -54,8 +57,7 @@ class AudioMonitor(context: Context): IMonitor {
         val rms = rootMeanSquared(buffer)
         val decibelValue = decibelFromRms(rms)
         val classification = classifySignalStrength(decibelValue)
-
-        dbManager.storeAudioMeasurement(decibelValue, classification)
+        dbManager.storeAudioMeasurement(decibelValue, classification,currentLocation?.latitude, currentLocation?.longitude, currentGridCell)
         return decibelValue
     }
 

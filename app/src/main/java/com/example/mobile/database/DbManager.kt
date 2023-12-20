@@ -71,13 +71,19 @@ class DbManager(context: Context) {
     private fun storeMeasurement(
         decibels: Double,
         classification: Classification,
-        monitor: MonitorVariant
+        monitor: MonitorVariant,
+        latitude : Double? = null,
+        longitude : Double? = null,
+        grid : String? = null
     ) {
         var measurement = Measurement(
             0,
             decibels,
             classification,
             monitor.name,
+            latitude,
+            longitude,
+            grid,
             Date(System.currentTimeMillis())
         )
 
@@ -90,16 +96,17 @@ class DbManager(context: Context) {
         }
     }
 
-    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
+    fun storeAudioMeasurement(decibels: Double, classification: Classification, latitude: Double? = null, longitude: Double? = null,grid : String? = null
+    ) {
+        storeMeasurement(decibels, classification, MonitorVariant.AUDIO, latitude, longitude, grid)
     }
 
-    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.WIFI)
+    fun storeWifiMeasurement(decibels: Double, classification: Classification, latitude: Double, longitude: Double) {
+        storeMeasurement(decibels, classification, MonitorVariant.WIFI, latitude, longitude)
     }
 
-    fun storeMobileMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.LTE)
+    fun storeMobileMeasurement(decibels: Double, classification: Classification, latitude: Double, longitude: Double) {
+        storeMeasurement(decibels, classification, MonitorVariant.LTE, latitude, longitude)
     }
 
     fun getAllMeasurements(): List<Measurement> {

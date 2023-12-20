@@ -47,7 +47,7 @@ fun LteMonitoringScreen(
         lteMonitor.startMonitoring {
             lteMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = lteMonitor.readValue()
+                    value = lteMonitor.readValue(context)
                     delay(1000)
                 }
             }

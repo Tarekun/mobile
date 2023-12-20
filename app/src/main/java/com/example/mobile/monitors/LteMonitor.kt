@@ -9,6 +9,8 @@ import android.telephony.TelephonyCallback.SignalStrengthsListener
 import android.telephony.TelephonyManager
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 
 class LteMonitor(
     context: Context
@@ -18,7 +20,6 @@ class LteMonitor(
     private var signalDbm: Double = 0.0
     private val noSignalDbm = Double.NEGATIVE_INFINITY
     private val dbManager = DbManager(context)
-
     private val context = context
     private var signalStrengthListener: PhoneStateListener? = null
     private var telephonyCallback: TelephonyCallback? = null
@@ -78,10 +79,10 @@ class LteMonitor(
         }
     }
 
-    override fun readValue(): Double {
+    override fun readValue(context: Context): Double {
         val decibelValue = signalDbm
         val classification = classifySignalStrength(decibelValue)
-        dbManager.storeAudioMeasurement(decibelValue, classification)
+        dbManager.storeAudioMeasurement(decibelValue, classification,currentLocation?.latitude, currentLocation?.longitude,currentGridCell)
         return signalDbm
     }
 

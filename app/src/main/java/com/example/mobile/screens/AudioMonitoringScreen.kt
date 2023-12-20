@@ -45,7 +45,7 @@ fun AudioMonitoringScreen(
         audioMonitor.startMonitoring {
             audioMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = audioMonitor.readValue()
+                    value = audioMonitor.readValue(context)
                     delay(AudioMonitor.defaultTimePeriodMs)
                 }
             }

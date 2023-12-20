@@ -44,7 +44,7 @@ fun WifiMonitoringScreen(
         wifiMonitor.startMonitoring {
             wifiMonitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = wifiMonitor.readValue()
+                    value = wifiMonitor.readValue(context)
                     delay(WifiMonitor.defaultTimePeriodMs)
                 }
             }

@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import com.example.mobile.monitors.IMonitor
 import java.util.Date
 
 enum class Classification(val intValue: Int) {
@@ -25,6 +24,9 @@ data class Measurement(
     val classification: Classification,
     //TODO: should this be a MonitorVariant ??
     val monitor: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val grid : String? = null,
     val timestamp: Date
 )
 

@@ -11,6 +11,8 @@ import android.provider.Settings
 import androidx.annotation.RequiresPermission
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 
 class WifiMonitor(
     activity: Activity,
@@ -24,7 +26,6 @@ class WifiMonitor(
     private val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val dbManager = DbManager(applicationContext)
-
     companion object {
         // periodo di esecuzione delle misurazioni suggerito
         const val defaultTimePeriodMs: Long = 60000
@@ -98,7 +99,7 @@ class WifiMonitor(
 
     // value read in dBm
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    override fun readValue(): Double {
+    override fun readValue(context: Context): Double {
         //TODO: implement signal monitoring for both any network and only the connected one
         val scanResults: List<ScanResult> = wifiManager.scanResults
         if (scanResults.isEmpty()) {
@@ -109,8 +110,7 @@ class WifiMonitor(
             val totalSignalStrength = scanResults.sumBy { it.level }
             val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
             val classification = classifySignalStrength(averageSignalStrength)
-
-            dbManager.storeAudioMeasurement(averageSignalStrength, classification)
+            dbManager.storeAudioMeasurement(averageSignalStrength, classification, currentLocation?.latitude, currentLocation?.longitude,currentGridCell)
             return averageSignalStrength
         }
     }

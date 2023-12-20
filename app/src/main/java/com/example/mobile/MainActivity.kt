@@ -19,6 +19,7 @@ import com.example.mobile.monitors.IMonitor.MonitorVariant
 import com.example.mobile.screens.AudioMonitoringScreen
 import com.example.mobile.screens.LteMonitoringScreen
 import com.example.mobile.screens.WifiMonitoringScreen
+import com.example.mobile.screens.MapActivity
 import com.example.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
-        val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
+        val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE, MonitorVariant.MAP)
 
         setContent {
             MobileTheme {
@@ -66,6 +67,8 @@ class MainActivity : ComponentActivity() {
                             MonitorVariant.AUDIO -> AudioMonitoringScreen(context = this@MainActivity)
                             MonitorVariant.WIFI -> WifiMonitoringScreen(context = this@MainActivity)
                             MonitorVariant.LTE -> LteMonitoringScreen(context = this@MainActivity)
+                            MonitorVariant.MAP -> MapActivity()
+
                         }
                     }
                 }
