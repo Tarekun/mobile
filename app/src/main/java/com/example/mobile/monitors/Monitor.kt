@@ -81,7 +81,9 @@ abstract class Monitor(
     }
 
     override fun reset() {
-        stopMonitoring()
+        if (currentStatus != MonitorState.STOPPED) {
+            stopMonitoring()
+        }
         moveToCreated()
     }
 }

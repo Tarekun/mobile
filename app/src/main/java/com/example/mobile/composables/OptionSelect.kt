@@ -22,13 +22,11 @@ fun <T> OptionSelect(
     onChange: (selectedOption: T) -> Unit,
     getLabel: (option: T) -> String = { it.toString() },
     defaultOption: T? = null
-    //TODO: add check that default is present in the list?
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(defaultOption) as MutableState<T> }
 
-    Column(
-    ) {
+    Column() {
         OutlinedButton(
             onClick = { expanded = true },
         ) {
