@@ -24,6 +24,7 @@ import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.screens.MonitoringScreen
+import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
 
 
@@ -85,14 +86,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                     ) {
-                        if (showSettings) {
-
-                        }
-                        else when (inUseMonitor) {
-                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
-                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
-                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
-                        }
+//                        if (showSettings) {
+                            SettingsScreen()
+//                        }
+//                        else when (inUseMonitor) {
+//                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
+//                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
+//                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
+//                        }
                     }
                 }
             }

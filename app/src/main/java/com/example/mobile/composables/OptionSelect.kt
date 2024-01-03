@@ -1,6 +1,7 @@
 package com.example.mobile.composables
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 
 @Composable
 fun <T> OptionSelect(
@@ -21,7 +23,8 @@ fun <T> OptionSelect(
     options: List<T>,
     onChange: (selectedOption: T) -> Unit,
     getLabel: (option: T) -> String = { it.toString() },
-    defaultOption: T? = null
+    defaultOption: T? = null,
+    buttonModifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(defaultOption) as MutableState<T> }
@@ -29,6 +32,7 @@ fun <T> OptionSelect(
     Column() {
         OutlinedButton(
             onClick = { expanded = true },
+            modifier = buttonModifier
         ) {
             Text(
                 label + if(selectedOption != null) " (${getLabel(selectedOption)})" else ""
