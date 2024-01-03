@@ -7,17 +7,38 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.example.mobile.composables.Content
+import com.example.mobile.composables.MonitorInfobox
 import com.example.mobile.database.DbManager
 import com.example.mobile.database.SettingsDao
-import com.example.mobile.monitors.IMonitor
+import com.example.mobile.monitors.Monitor
+import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,13 +58,14 @@ fun permissionForMonitor(variant: MonitorVariant): String {
 @Composable
 fun MonitoringScreen(
     context: Activity,
-    monitor: IMonitor
+    monitor: Monitor
 ) {
+    val dbManager = DbManager(context)
     var monitoringJob: Job? by remember { mutableStateOf(null) }
     var value: Double by remember { mutableStateOf(0.0) }
     var periodMs: Long by remember { mutableStateOf(1000) }
     var firstRender: Boolean by remember { mutableStateOf(true) }
-    val dbManager = DbManager(context)
+    var showMap: Boolean by remember { mutableStateOf(false) }
 
     LaunchedEffect(periodMs) {
         if (firstRender) {
@@ -122,14 +144,46 @@ fun MonitoringScreen(
         periodMs = newPeriod
     }
 
-    Content(
-        currentVolume = value,
-        start = {
-            startMonitoring()
-        },
-        stop = {
-            stopMonitoring()
-        },
-        onPeriodUpdate = { updateMonitoringPeriod(it) }
-    )
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MonitorInfobox(
+            variant = monitor.variant,
+            monitorStatus = monitor.currentStatus,
+            value = value
+        )
+        Row() {
+            Button(
+                onClick = { showMap = !showMap },
+            ) {
+                Text(text = "${if (showMap) "Hide" else "Show"} map")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = {
+                when (monitor.currentStatus) {
+                    MonitorState.CREATED -> startMonitoring()
+                    MonitorState.STARTED -> stopMonitoring()
+                    MonitorState.STOPPED -> {
+                        monitor.reset()
+                        startMonitoring()
+                    }
+                }
+            }) {
+                Text(text = "${if (monitor.currentStatus != MonitorState.STARTED) "Start" else "Stop"} monitoring")
+            }
+        }
+        Content(
+            currentVolume = value,
+            start = {
+                startMonitoring()
+            },
+            stop = {
+                stopMonitoring()
+            },
+            onPeriodUpdate = { updateMonitoringPeriod(it) }
+        )
+    }
 }
