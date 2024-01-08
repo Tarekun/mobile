@@ -1,6 +1,7 @@
 package com.example.mobile.database
 
 import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -64,10 +65,16 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-class DbManager(context: Context) {
-    private var db: AppDatabase = AppDatabase.getDatabase(context)
-    private var measurementDao: MeasurementDao = db.measurementDao()
-    private var settingsDao: SettingsDao = db.settingsDao()
+object DbManager {
+    private lateinit var db: AppDatabase
+    private lateinit var measurementDao: MeasurementDao
+    private lateinit var settingsDao: SettingsDao
+
+    fun init(applicationContext: Context) {
+        db = AppDatabase.getDatabase(applicationContext)
+        measurementDao = db.measurementDao()
+        settingsDao = db.settingsDao()
+    }
 
     private fun storeMeasurement(
         decibels: Double,

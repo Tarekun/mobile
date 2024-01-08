@@ -96,16 +96,8 @@ class LteMonitor(
         )
     }
 
-    override fun readValue(): Double {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                val decibelValue = signalDbm
-                val classification = classifySignalStrength(decibelValue)
-                dbManager.storeAudioMeasurement(decibelValue, classification)
-                signalDbm
-            }
-        )
+    override fun doReadValue(): Double {
+        return signalDbm
     }
 
     override fun classifySignalStrength(dB: Double): Classification {

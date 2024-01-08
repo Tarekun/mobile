@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.mobile.composables.OptionSelect
+import com.example.mobile.database.DbManager
 import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
@@ -44,6 +45,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        DbManager.init(applicationContext)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var showSettings by mutableStateOf(false)
@@ -86,14 +89,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                     ) {
-//                        if (showSettings) {
+                        if (showSettings) {
                             SettingsScreen()
-//                        }
-//                        else when (inUseMonitor) {
-//                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
-//                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
-//                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
-//                        }
+                        }
+                        else when (inUseMonitor) {
+                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
+                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
+                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
+                        }
                     }
                 }
             }

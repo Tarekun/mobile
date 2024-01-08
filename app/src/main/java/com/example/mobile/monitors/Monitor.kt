@@ -1,6 +1,7 @@
 package com.example.mobile.monitors
 
 import android.content.Context
+import android.net.wifi.ScanResult
 import android.util.Log
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
@@ -28,7 +29,6 @@ interface IMonitor {
 abstract class Monitor(
     protected val context: Context
 ): IMonitor {
-    protected val dbManager = DbManager(context)
     private var state = MonitorState.CREATED
     val currentStatus: MonitorState
         get() = state
@@ -69,6 +69,7 @@ abstract class Monitor(
 
     protected abstract fun doStartMonitoring(onStart: () -> Unit): Boolean
     protected abstract fun doStopMonitoring(): Boolean
+    protected abstract fun doReadValue(): Double
 
     override fun startMonitoring(onStart: () -> Unit) {
         val success = doStartMonitoring(onStart = onStart)
@@ -78,6 +79,18 @@ abstract class Monitor(
     override fun stopMonitoring() {
         val success = doStopMonitoring()
         if (success) moveToStopped()
+    }
+
+    override fun readValue(): Double {
+        return checkStateOrFail(
+            MonitorState.STARTED,
+            {
+                val value = doReadValue()
+                val classification = classifySignalStrength(value)
+                DbManager.storeWifiMeasurement(value, classification)
+                value
+            }
+        )
     }
 
     override fun reset() {

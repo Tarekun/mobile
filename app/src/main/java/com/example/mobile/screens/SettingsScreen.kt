@@ -197,7 +197,8 @@ fun SettingsScreen() {
             onChange = {
                 monitoringPeriod = it
                 // store the update on db
-            }
+            },
+            min = 1
         )
         NumberSetting(
             title = context.getString(R.string.measurement_setting_title),
@@ -206,7 +207,8 @@ fun SettingsScreen() {
             onChange = {
                 monitoringsNumber = it
                 // store the update on db
-            }
+            },
+            min = 1
         )
         OptionsSetting(
             title = context.getString(R.string.grid_setting_title),
