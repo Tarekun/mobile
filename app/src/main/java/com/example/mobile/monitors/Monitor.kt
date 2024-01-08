@@ -67,18 +67,31 @@ abstract class Monitor(
         }
     }
 
-    protected abstract fun doStartMonitoring(onStart: () -> Unit): Boolean
+    protected abstract fun doStartMonitoring(): Boolean
     protected abstract fun doStopMonitoring(): Boolean
     protected abstract fun doReadValue(): Double
 
     override fun startMonitoring(onStart: () -> Unit) {
-        val success = doStartMonitoring(onStart = onStart)
-        if (success) moveToStarted()
+        checkStateOrFail(
+            MonitorState.CREATED,
+            {
+                if (doStartMonitoring()) {
+                    moveToStarted()
+                    onStart()
+                }
+            }
+        )
     }
 
     override fun stopMonitoring() {
-        val success = doStopMonitoring()
-        if (success) moveToStopped()
+        checkStateOrFail(
+            MonitorState.STARTED,
+            {
+                if (doStopMonitoring()) {
+                    moveToStopped()
+                }
+            }
+        )
     }
 
     override fun readValue(): Double {

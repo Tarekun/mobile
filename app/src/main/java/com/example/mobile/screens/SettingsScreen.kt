@@ -13,11 +13,14 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +35,12 @@ import com.example.mobile.R
 import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
 import com.example.mobile.composables.OptionSelect
+import com.example.mobile.database.MonitorSettings
+import com.example.mobile.database.SettingsTable
+import com.example.mobile.database.SettingsUtils
+import com.example.mobile.monitors.MonitorVariant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SettingLayout(
@@ -87,8 +96,8 @@ fun SettingLayout(
 fun NumberSetting(
     title: String,
     description: String,
-    value: Int,
-    onChange: (newValue: Int) -> Unit,
+    value: Long,
+    onChange: (newValue: Long) -> Unit,
     max: Int = Int.MAX_VALUE,
     min: Int = Int.MIN_VALUE
 ) {
@@ -105,7 +114,7 @@ fun NumberSetting(
                 TextField(
                     value = value.toString(),
                     onValueChange = {
-                        val newValue = it.toIntOrNull() ?: 0
+                        val newValue = it.toLongOrNull() ?: 0
                         onChange(newValue)
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
@@ -167,7 +176,7 @@ fun <T> OptionsSetting(
                 onChange = {
                     onChange(it)
                 },
-                defaultOption = value,
+                value = value,
                 getLabel = getLabel,
                 buttonModifier = Modifier.fillMaxWidth()
             )
@@ -176,15 +185,46 @@ fun <T> OptionsSetting(
 }
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    variant: MonitorVariant
+) {
     val context = LocalContext.current
     val gridSizes = listOf(10, 100, 1000)
-    //TODO: initialize these values
-    var monitoringPeriod: Int by remember { mutableStateOf(10) }
-    var monitoringsNumber: Int by remember { mutableStateOf(10) }
-    var gridUnitLength: Int by remember { mutableStateOf(10) }
 
-    Column {
+    var settings: SettingsTable? by remember { mutableStateOf(null) }
+    var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
+    var initializing by remember { mutableStateOf(true) }
+
+    fun setMonitorSettings() {
+        monitorSettings = when(variant) {
+            MonitorVariant.AUDIO -> settings!!.audio
+            MonitorVariant.WIFI -> settings!!.wifi
+            MonitorVariant.LTE -> settings!!.lte
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            settings = SettingsUtils.getStoredSettings()
+            setMonitorSettings()
+            initializing = false
+        }
+    }
+    LaunchedEffect(settings) {
+        withContext(Dispatchers.IO) {
+            if (!initializing) {
+                SettingsUtils.updateSettings(settings!!)
+                setMonitorSettings()
+            }
+        }
+    }
+    LaunchedEffect(variant) {
+        if(!initializing) setMonitorSettings()
+    }
+
+    if (initializing)
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    else Column {
         AlertTextbox(
             severity = AlertSeverity.INFO,
             content = LocalContext.current.getString(R.string.settings_alert_note)
@@ -193,30 +233,67 @@ fun SettingsScreen() {
         NumberSetting(
             title = context.getString(R.string.period_setting_title),
             description = context.getString(R.string.period_setting_desc),
-            value = monitoringPeriod,
+            value = monitorSettings?.monitorPeriod ?: 0,
             onChange = {
-                monitoringPeriod = it
-                // store the update on db
+                when(variant) {
+                    MonitorVariant.AUDIO -> settings = settings!!.copy(
+                        audio = MonitorSettings(
+                            it,
+                            settings!!.audio.measurementNumber,
+                        )
+                    )
+                    MonitorVariant.WIFI -> settings = settings!!.copy(
+                        wifi = MonitorSettings(
+                            it,
+                            settings!!.wifi.measurementNumber,
+                        )
+                    )
+                    MonitorVariant.LTE -> settings = settings!!.copy(
+                        lte = MonitorSettings(
+                            it,
+                            settings!!.lte.measurementNumber,
+                        )
+                    )
+                }
             },
             min = 1
         )
         NumberSetting(
             title = context.getString(R.string.measurement_setting_title),
             description = context.getString(R.string.measurement_setting_desc),
-            value = monitoringsNumber,
+            value = monitorSettings?.measurementNumber?.toLong() ?: 0,
             onChange = {
-                monitoringsNumber = it
-                // store the update on db
+                when(variant) {
+                    MonitorVariant.AUDIO -> settings = settings!!.copy(
+                        audio = MonitorSettings(
+                            settings!!.audio.monitorPeriod,
+                            it.toInt()
+                        )
+                    )
+                    MonitorVariant.WIFI -> settings = settings!!.copy(
+                        wifi = MonitorSettings(
+                            settings!!.wifi.monitorPeriod,
+                            it.toInt()
+                        )
+                    )
+                    MonitorVariant.LTE -> settings = settings!!.copy(
+                        lte = MonitorSettings(
+                            settings!!.lte.monitorPeriod,
+                            it.toInt()
+                        )
+                    )
+                }
             },
             min = 1
         )
         OptionsSetting(
             title = context.getString(R.string.grid_setting_title),
             description = context.getString(R.string.grid_setting_desc),
-            value = gridUnitLength,
+            value = settings?.gridUnitLength ?: 0,
             onChange = {
-                gridUnitLength = it
-                // store the update on db
+                settings = settings!!.copy(
+                    gridUnitLength = it
+                )
             },
             options = gridSizes
         )

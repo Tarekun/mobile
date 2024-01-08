@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
                                 OptionSelect(
                                     label = "Select Monitor",
                                     options = monitors,
+                                    value = inUseMonitor,
                                     onChange = { inUseMonitor = it },
                                     defaultOption = MonitorVariant.AUDIO
                                 )
@@ -90,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                     ) {
                         if (showSettings) {
-                            SettingsScreen()
+                            SettingsScreen(variant = inUseMonitor)
                         }
                         else when (inUseMonitor) {
                             MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)

@@ -23,34 +23,23 @@ class AudioMonitor(context: Context): Monitor(context) {
     }
 
     @RequiresPermission(value = "android.permission.RECORD_AUDIO")
-    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
-        return checkStateOrFail(
-            MonitorState.CREATED,
-            {
-                audioRecorder = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    sampleFrequency,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
-                audioRecorder?.startRecording()
-                onStart()
-                true
-            }
+    override fun doStartMonitoring(): Boolean {
+        audioRecorder = AudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            sampleFrequency,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            bufferSize
         )
+        audioRecorder?.startRecording()
+        return true
     }
 
     override fun doStopMonitoring(): Boolean {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                audioRecorder?.stop()
-                audioRecorder?.release()
-                audioRecorder = null
-                true
-            }
-        )
+        audioRecorder?.stop()
+        audioRecorder?.release()
+        audioRecorder = null
+        return true
     }
 
     override fun doReadValue(): Double {

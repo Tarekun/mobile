@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +28,9 @@ import androidx.core.app.ActivityCompat
 import com.example.mobile.composables.Content
 import com.example.mobile.composables.MonitorInfobox
 import com.example.mobile.database.DbManager
+import com.example.mobile.database.MonitorSettings
+import com.example.mobile.database.SettingsTable
+import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
@@ -51,24 +56,18 @@ fun MonitoringScreen(
 ) {
     var monitoringJob: Job? by remember { mutableStateOf(null) }
     var value: Double by remember { mutableStateOf(0.0) }
-    var periodMs: Long by remember { mutableStateOf(1000) }
-    var firstRender: Boolean by remember { mutableStateOf(true) }
     var showMap: Boolean by remember { mutableStateOf(false) }
+    var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
+    var initializing by remember { mutableStateOf(true) }
 
-    LaunchedEffect(periodMs) {
-        if (firstRender) {
-            withContext(Dispatchers.IO) {
-                val storedPeriod: Long? = DbManager.findPeriodForMonitor(monitor.variant)
-                if (storedPeriod != null) {
-                    periodMs = storedPeriod
-                }
+    LaunchedEffect(monitor.variant) {
+        withContext(Dispatchers.IO) {
+            monitorSettings = when(monitor.variant) {
+                MonitorVariant.AUDIO -> SettingsUtils.getStoredSettings().audio
+                MonitorVariant.WIFI -> SettingsUtils.getStoredSettings().wifi
+                MonitorVariant.LTE -> SettingsUtils.getStoredSettings().lte
             }
-            firstRender = false
-        }
-        else {
-            withContext(Dispatchers.IO) {
-                DbManager.updatePeriodForMonitor(monitor.variant, periodMs)
-            }
+            initializing = false
         }
     }
 
@@ -87,7 +86,7 @@ fun MonitoringScreen(
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
                     value = monitor.readValue()
-                    delay(periodMs)
+                    delay(monitorSettings!!.monitorPeriod)
                 }
             }
         }
@@ -105,6 +104,10 @@ fun MonitoringScreen(
     }
 
     fun startMonitoring() {
+        //TODO: permission check should be
+        //check location enabled to localize every measurement
+        //check specific permission per monitor
+        //start monitoring
         if (ActivityCompat.checkSelfPermission(
                 context,
                 permissionForMonitor(monitor.variant)
@@ -124,25 +127,21 @@ fun MonitoringScreen(
         value = 0.0
     }
 
-    fun updateMonitoringPeriod(newPeriod: Long) {
-        require(newPeriod > 0) {
-            "`updateMonitoringPeriod` argument `newPeriod` should be positive, was $newPeriod instead"
-        }
-        //TODO: store the updated period on the db
-        periodMs = newPeriod
-    }
-
-    Column(
+    if (initializing)
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    else Column(
         modifier = Modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MonitorInfobox(
-            variant = monitor.variant,
-            monitorStatus = monitor.currentStatus,
-            value = value
-        )
+        monitorSettings?.let {
+            MonitorInfobox(
+                variant = monitor.variant,
+                monitorStatus = monitor.currentStatus,
+                monitorSettings = it,
+                value = value
+            )
+        }
         Row() {
             Button(
                 onClick = { showMap = !showMap },
@@ -163,15 +162,15 @@ fun MonitoringScreen(
                 Text(text = "${if (monitor.currentStatus != MonitorState.STARTED) "Start" else "Stop"} monitoring")
             }
         }
-        Content(
-            currentVolume = value,
-            start = {
-                startMonitoring()
-            },
-            stop = {
-                stopMonitoring()
-            },
-            onPeriodUpdate = { updateMonitoringPeriod(it) }
-        )
+//        Content(
+//            currentVolume = value,
+//            start = {
+//                startMonitoring()
+//            },
+//            stop = {
+//                stopMonitoring()
+//            },
+//            onPeriodUpdate = { updateMonitoringPeriod(it) }
+//        )
     }
 }

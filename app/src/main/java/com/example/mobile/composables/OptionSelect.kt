@@ -21,13 +21,14 @@ import androidx.compose.ui.Modifier
 fun <T> OptionSelect(
     label: String,
     options: List<T>,
+    value: T?,
     onChange: (selectedOption: T) -> Unit,
     getLabel: (option: T) -> String = { it.toString() },
     defaultOption: T? = null,
     buttonModifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(defaultOption) as MutableState<T> }
+    val selectedOption = value
 
     Column() {
         OutlinedButton(
@@ -47,9 +48,9 @@ fun <T> OptionSelect(
             options.forEach { option ->
                 DropdownMenuItem(
                     onClick = {
-                        selectedOption = option
+//                        selectedOption = option
                         expanded = false
-                        onChange(selectedOption)
+                        onChange(option)
                     },
                     text = { Text(text = getLabel(option)) }
                 )

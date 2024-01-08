@@ -60,11 +60,13 @@ fun AlertTextbox(
             Spacer(modifier = Modifier.width(8.dp))
 
             Column() {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (title != "") {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(

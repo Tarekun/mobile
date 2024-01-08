@@ -111,9 +111,9 @@ object DbManager {
     fun findPeriodForMonitor(variant: MonitorVariant): Long? {
         val intervalSetting = settingsDao.findByName(
             when (variant) {
-                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
             }
         )
 
@@ -124,9 +124,9 @@ object DbManager {
         val setting = Settings(
             //name selection
             when (variant) {
-                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
             },
             period.toString()
         )
@@ -135,5 +135,13 @@ object DbManager {
 
     fun findSettingByName(name: String): Settings? {
         return settingsDao.findByName(name)
+    }
+
+    fun findAllSettings(): List<Settings> {
+        return settingsDao.getAllSettings()
+    }
+
+    fun updateAllSettings(settings: List<Settings>) {
+        settingsDao.insertOrUpdateAllSettings(settings)
     }
 }
