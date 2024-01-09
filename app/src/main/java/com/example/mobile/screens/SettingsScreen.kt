@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -17,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -45,7 +47,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SettingLayout(
     title: String,
-    description: String,
+    description: String = "",
     inputField: @Composable() () -> Unit
 ) {
     var showDialog: Boolean by remember { mutableStateOf(false) }
@@ -65,10 +67,15 @@ fun SettingLayout(
                     .padding(start = 8.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = {
-                showDialog = true
-            }) {
-                Icon(imageVector = Icons.Default.Info, contentDescription = "Setting explanation")
+            if (description != "") {
+                IconButton(onClick = {
+                    showDialog = true
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Setting explanation"
+                    )
+                }
             }
 
             if (showDialog) {
@@ -186,7 +193,8 @@ fun <T> OptionsSetting(
 
 @Composable
 fun SettingsScreen(
-    variant: MonitorVariant
+    variant: MonitorVariant,
+    navigateTo: (targetScreen: Screens) -> Unit,
 ) {
     val context = LocalContext.current
     val gridSizes = listOf(10, 100, 1000)
@@ -296,6 +304,17 @@ fun SettingsScreen(
                 )
             },
             options = gridSizes
+        )
+        SettingLayout(
+            title = context.getString(R.string.settingscreen_export_button_description),
+            inputField = {
+                OutlinedButton(
+                    onClick = { navigateTo(Screens.EXPORT) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(context.getString(R.string.settingscreen_export_button))
+                }
+            }
         )
     }
 }

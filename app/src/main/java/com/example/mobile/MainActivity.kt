@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
         DbManager.init(applicationContext)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
-        var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
+        var currentScreen: Screens by mutableStateOf(Screens.EXPORT)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
         val history = NavigationHistory(currentScreen)
 
@@ -117,7 +117,10 @@ class MainActivity : ComponentActivity() {
                                     MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
                                 }
                             Screens.SETTINGS ->
-                                SettingsScreen(variant = inUseMonitor)
+                                SettingsScreen(
+                                    variant = inUseMonitor,
+                                    navigateTo = { navigateTo(it) }
+                                )
                             Screens.EXPORT ->
                                 ExportScreen()
                         }

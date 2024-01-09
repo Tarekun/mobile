@@ -26,4 +26,8 @@ class NavigationHistory(currentScreen: Screens) {
         backStack.pop()
         return currentScreen
     }
+
+    fun isLast(): Boolean {
+        return backStack.size == 1
+    }
 }

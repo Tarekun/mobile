@@ -76,7 +76,7 @@ object DbManager {
         settingsDao = db.settingsDao()
     }
 
-    private fun storeMeasurement(
+    fun storeMeasurement(
         decibels: Double,
         classification: Classification,
         monitor: MonitorVariant
@@ -92,45 +92,8 @@ object DbManager {
          measurementDao.insert(measurement)
     }
 
-    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
-    }
-
-    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.WIFI)
-    }
-
-    fun storeMobileMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.LTE)
-    }
-
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
-    }
-
-    fun findPeriodForMonitor(variant: MonitorVariant): Long? {
-        val intervalSetting = settingsDao.findByName(
-            when (variant) {
-                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
-            }
-        )
-
-        return intervalSetting?.value?.toLong()
-    }
-
-    fun updatePeriodForMonitor(variant: MonitorVariant, period: Long) {
-        val setting = Settings(
-            //name selection
-            when (variant) {
-                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
-            },
-            period.toString()
-        )
-        settingsDao.insertOrUpdateSetting(setting)
     }
 
     fun findSettingByName(name: String): Settings? {
