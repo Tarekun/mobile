@@ -24,7 +24,10 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
+import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
+import com.example.mobile.screens.NavigationHistory
+import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
 
@@ -49,9 +52,18 @@ class MainActivity : ComponentActivity() {
         DbManager.init(applicationContext)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
-        var showSettings by mutableStateOf(false)
+        var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
+        val history = NavigationHistory(currentScreen)
 
+        fun navigateTo(screen: Screens) {
+            history.navigateTo(screen)
+            currentScreen = history.currentScreen
+        }
+        fun navigateBack() {
+            history.navigateBack()
+            currentScreen = history.currentScreen
+        }
 
         setContent {
             MobileTheme {
@@ -71,10 +83,17 @@ class MainActivity : ComponentActivity() {
                                 )
                             },
                             navigationIcon = {
-                                IconButton(onClick = { showSettings = !showSettings }) {
+                                IconButton(onClick = {
+                                    when (currentScreen) {
+                                        Screens.MONITORING -> navigateTo(Screens.SETTINGS)
+                                        Screens.SETTINGS -> navigateBack()
+                                        Screens.EXPORT -> navigateBack()
+                                    }
+                                }) {
                                     Icon(
-                                        imageVector = if(showSettings) Icons.Filled.ArrowBack
-                                            else Icons.Filled.Settings,
+                                        imageVector =
+                                            if(currentScreen == Screens.MONITORING) Icons.Filled.Settings
+                                            else Icons.Filled.ArrowBack,
                                         contentDescription = "Go to settings"
                                     )
                                 }
@@ -90,13 +109,17 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                     ) {
-                        if (showSettings) {
-                            SettingsScreen(variant = inUseMonitor)
-                        }
-                        else when (inUseMonitor) {
-                            MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
-                            MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
-                            MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
+                        when (currentScreen) {
+                            Screens.MONITORING ->
+                                when (inUseMonitor) {
+                                    MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
+                                    MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
+                                    MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
+                                }
+                            Screens.SETTINGS ->
+                                SettingsScreen(variant = inUseMonitor)
+                            Screens.EXPORT ->
+                                ExportScreen()
                         }
                     }
                 }
