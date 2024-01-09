@@ -1,6 +1,8 @@
 <resources>
     <!--  <string name=""></string>  -->
     <string name="app_name">mobile</string>
+    <string name="file_provider_authority">com.your.package.name.file.provider</string>
+
     <string name="enable_wifi_dialog_title">Enable Wifi connection</string>
     <string name="enable_wifi_dialog_content">In order to monitor the strength of wifi connections in your area you need to turn on wifi connectivity</string>
     <string name="enable_location_dialog_title">Enable location</string>
@@ -14,5 +16,9 @@
     <string name="grid_setting_desc">This setting controls how long should be the side of the squares in the map grid</string>
     <string name="settingscreen_export_button_description">More...</string>
     <string name="settingscreen_export_button">Go to the data import/export settings</string>
+    <string name="exportscreen_export_button">Export your local measurements</string>
+    <string name="exportscreen_import_button">Import measurements from dump</string>
+    <string name="exportscreen_proximity_disabled">Enable proximity share</string>
+    <string name="exportscreen_proximity_enabled">Disable proximity share</string>
 
 </resources>

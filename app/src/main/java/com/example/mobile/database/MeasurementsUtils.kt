@@ -6,17 +6,20 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import com.example.mobile.monitors.MonitorVariant
-import java.util.Date
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Entity(tableName = "measurement")
+@Serializable
 data class Measurement(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     val signalStrength: Double,
     val classification: Classification,
-    //TODO: should this be a MonitorVariant ??
-    val monitor: String,
-    val timestamp: Date
+    val monitor: MonitorVariant,
+    val timestamp: Instant
 )
 
 @Dao
@@ -26,6 +29,9 @@ interface MeasurementDao {
 
     @Query("SELECT * FROM measurement")
     fun getAllMeasurements(): List<Measurement>
+
+    @Query("SELECT * FROM measurement WHERE monitor = :monitor")
+    fun getAllMeasurementsPerMonitor(monitor: String): List<Measurement>
 }
 
 enum class Classification(val intValue: Int) {
@@ -50,7 +56,8 @@ object MeasurementsUtils {
         DbManager.storeMeasurement(decibels, classification, MonitorVariant.LTE)
     }
 
-    fun exportLocalCollection() {
-
+    fun getJsonLocalCollection(variant: MonitorVariant): String {
+        val measurements: List<Measurement> = DbManager.findAllMeasurementsPerVariant(variant)
+        return Json.encodeToString(measurements)
     }
 }

@@ -1,5 +1,7 @@
 package com.example.mobile
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,8 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import com.example.mobile.composables.OptionSelect
 import com.example.mobile.database.DbManager
+import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
@@ -30,7 +34,8 @@ import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
-
+import java.io.File
+import kotlin.io.path.writeText
 
 
 class MainActivity : ComponentActivity() {
@@ -52,10 +57,10 @@ class MainActivity : ComponentActivity() {
         DbManager.init(applicationContext)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
-        var currentScreen: Screens by mutableStateOf(Screens.EXPORT)
+        var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
-        val history = NavigationHistory(currentScreen)
 
+        val history = NavigationHistory(currentScreen)
         fun navigateTo(screen: Screens) {
             history.navigateTo(screen)
             currentScreen = history.currentScreen
@@ -85,7 +90,9 @@ class MainActivity : ComponentActivity() {
                             navigationIcon = {
                                 IconButton(onClick = {
                                     when (currentScreen) {
+                                        // on the monitoring screen this is the settings button
                                         Screens.MONITORING -> navigateTo(Screens.SETTINGS)
+                                        // otherwise it's the navigate back
                                         Screens.SETTINGS -> navigateBack()
                                         Screens.EXPORT -> navigateBack()
                                     }
@@ -111,18 +118,24 @@ class MainActivity : ComponentActivity() {
                     ) {
                         when (currentScreen) {
                             Screens.MONITORING ->
-                                when (inUseMonitor) {
-                                    MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)
-                                    MonitorVariant.WIFI -> MonitoringScreen(context = this@MainActivity, wifiMonitor)
-                                    MonitorVariant.LTE -> MonitoringScreen(context = this@MainActivity, lteMonitor)
-                                }
+                                MonitoringScreen(
+                                    context = this@MainActivity,
+                                    monitor = when (inUseMonitor) {
+                                        MonitorVariant.AUDIO -> audioMonitor
+                                        MonitorVariant.WIFI -> wifiMonitor
+                                        MonitorVariant.LTE -> lteMonitor
+                                    }
+                                )
                             Screens.SETTINGS ->
                                 SettingsScreen(
                                     variant = inUseMonitor,
                                     navigateTo = { navigateTo(it) }
                                 )
                             Screens.EXPORT ->
-                                ExportScreen()
+                                ExportScreen(
+                                    variant = inUseMonitor,
+                                    startIntent = { this@MainActivity.startActivity(it) },
+                                )
                         }
                     }
                 }

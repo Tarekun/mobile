@@ -8,19 +8,22 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.example.mobile.monitors.MonitorVariant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import java.lang.IllegalArgumentException
 import java.util.Date
 
 const val DATABASE_NAME = "mydatabase.db"
 
 private class Converters {
     @TypeConverter
-    fun fromTimestamp(value: Long): Date {
-        return value.let { Date(it) }
+    fun fromTimestamp(value: Long): Instant {
+        return value.let { Instant.fromEpochMilliseconds(value) }
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date): Long {
-        return date.time
+    fun dateToTimestamp(date: Instant): Long {
+        return date.toEpochMilliseconds()
     }
 
     @TypeConverter
@@ -38,6 +41,24 @@ private class Converters {
             4 -> Classification.MIN
             else -> Classification.INVALID
         }
+    }
+
+    @TypeConverter
+    fun variantToString(variant: MonitorVariant): String {
+        return variant.toString()
+    }
+
+    @TypeConverter
+    fun stringToVariant(variant: String): MonitorVariant {
+        for (monitorVariant in enumValues<MonitorVariant>()) {
+            if (variant == monitorVariant.toString()) {
+                return monitorVariant
+            }
+        }
+        throw IllegalArgumentException(
+            "The illegal monitor variant string \"${variant}\" was required. " +
+            "Only possible values are ${MonitorVariant.values().map { "${it.name} " }}"
+        )
     }
 }
 
@@ -85,11 +106,15 @@ object DbManager {
             0,
             decibels,
             classification,
-            monitor.name,
-            Date(System.currentTimeMillis())
+            monitor,
+            Clock.System.now()
         )
 
          measurementDao.insert(measurement)
+    }
+
+    fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant.name)
     }
 
     fun getAllMeasurements(): List<Measurement> {
