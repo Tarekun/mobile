@@ -1,6 +1,7 @@
 package com.example.mobile.database
 
 import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -64,10 +65,16 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-class DbManager(context: Context) {
-    private var db: AppDatabase = AppDatabase.getDatabase(context)
-    private var measurementDao: MeasurementDao = db.measurementDao()
-    private var settingsDao: SettingsDao = db.settingsDao()
+object DbManager {
+    private lateinit var db: AppDatabase
+    private lateinit var measurementDao: MeasurementDao
+    private lateinit var settingsDao: SettingsDao
+
+    fun init(applicationContext: Context) {
+        db = AppDatabase.getDatabase(applicationContext)
+        measurementDao = db.measurementDao()
+        settingsDao = db.settingsDao()
+    }
 
     private fun storeMeasurement(
         decibels: Double,
@@ -104,9 +111,9 @@ class DbManager(context: Context) {
     fun findPeriodForMonitor(variant: MonitorVariant): Long? {
         val intervalSetting = settingsDao.findByName(
             when (variant) {
-                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
             }
         )
 
@@ -117,9 +124,9 @@ class DbManager(context: Context) {
         val setting = Settings(
             //name selection
             when (variant) {
-                MonitorVariant.AUDIO -> SettingsDao.SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsDao.SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsDao.SettingsNames.LTE_MONITOR_PERIOD.name
+                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
+                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
+                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
             },
             period.toString()
         )
@@ -128,5 +135,13 @@ class DbManager(context: Context) {
 
     fun findSettingByName(name: String): Settings? {
         return settingsDao.findByName(name)
+    }
+
+    fun findAllSettings(): List<Settings> {
+        return settingsDao.getAllSettings()
+    }
+
+    fun updateAllSettings(settings: List<Settings>) {
+        settingsDao.insertOrUpdateAllSettings(settings)
     }
 }

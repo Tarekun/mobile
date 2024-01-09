@@ -8,7 +8,6 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyCallback.SignalStrengthsListener
 import android.telephony.TelephonyManager
 import com.example.mobile.database.Classification
-import com.example.mobile.database.DbManager
 
 class LteMonitor(
     context: Context
@@ -38,74 +37,55 @@ class LteMonitor(
         }
     }
 
-    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
-        return checkStateOrFail(
-            MonitorState.CREATED,
-            {
-                // da Build.VERSION_CODES.S TelephonyManager#listen diventa deprecata e
-                // si usa TelephonyManager#registerTelephonyCallback
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    telephonyCallback = object : TelephonyCallback(), SignalStrengthsListener {
-                        override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
-                            signalDbm = computeDbm(signalStrength)
-                        }
-                    }
-
-                    // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
-                    telephonyManager.registerTelephonyCallback(
-                        context.mainExecutor,
-                        telephonyCallback as TelephonyCallback
-                    )
-                } else {
-                    signalStrengthListener = object : PhoneStateListener() {
-                        override fun onSignalStrengthsChanged(signalStrength: SignalStrength?) {
-                            super.onSignalStrengthsChanged(signalStrength)
-                            // Calculate signal strength value (example: LTE signal strength)
-                            this@LteMonitor.signalDbm = computeDbm(signalStrength)
-                        }
-                    }
-                    telephonyManager.listen(
-                        signalStrengthListener,
-                        PhoneStateListener.LISTEN_SIGNAL_STRENGTHS
-                    )
-
+    override fun doStartMonitoring(): Boolean {
+        // da Build.VERSION_CODES.S TelephonyManager#listen diventa deprecata e
+        // si usa TelephonyManager#registerTelephonyCallback
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            telephonyCallback = object : TelephonyCallback(), SignalStrengthsListener {
+                override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
+                    signalDbm = computeDbm(signalStrength)
                 }
-
-                onStart()
-                true
             }
-        )
+
+            // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
+            telephonyManager.registerTelephonyCallback(
+                context.mainExecutor,
+                telephonyCallback as TelephonyCallback
+            )
+        } else {
+            signalStrengthListener = object : PhoneStateListener() {
+                override fun onSignalStrengthsChanged(signalStrength: SignalStrength?) {
+                    super.onSignalStrengthsChanged(signalStrength)
+                    // Calculate signal strength value (example: LTE signal strength)
+                    this@LteMonitor.signalDbm = computeDbm(signalStrength)
+                }
+            }
+            telephonyManager.listen(
+                signalStrengthListener,
+                PhoneStateListener.LISTEN_SIGNAL_STRENGTHS
+            )
+
+        }
+
+        return true
     }
 
     override fun doStopMonitoring(): Boolean {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
-                    telephonyManager.unregisterTelephonyCallback(telephonyCallback as TelephonyCallback)
-                } else {
-                    signalStrengthListener?.let {
-                        telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE)
-                    }
-                }
-                signalStrengthListener = null
-                telephonyCallback = null
-                true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // cast fatto per evitare messaggi di errore, in questo branch non verrà passato null
+            telephonyManager.unregisterTelephonyCallback(telephonyCallback as TelephonyCallback)
+        } else {
+            signalStrengthListener?.let {
+                telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE)
             }
-        )
+        }
+        signalStrengthListener = null
+        telephonyCallback = null
+        return true
     }
 
-    override fun readValue(): Double {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                val decibelValue = signalDbm
-                val classification = classifySignalStrength(decibelValue)
-                dbManager.storeAudioMeasurement(decibelValue, classification)
-                signalDbm
-            }
-        )
+    override fun doReadValue(): Double {
+        return signalDbm
     }
 
     override fun classifySignalStrength(dB: Double): Classification {

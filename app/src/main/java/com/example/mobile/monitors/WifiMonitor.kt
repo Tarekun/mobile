@@ -11,7 +11,6 @@ import android.provider.Settings
 import androidx.annotation.RequiresPermission
 import com.example.mobile.R
 import com.example.mobile.database.Classification
-import com.example.mobile.database.DbManager
 
 class WifiMonitor(
     private val activity: Activity,
@@ -63,63 +62,49 @@ class WifiMonitor(
     }
 
     @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
-    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
-        return checkStateOrFail(
-            MonitorState.CREATED,
-            {
-                if (!isWifiEnabled()) {
-                    val wifiIntent = Intent(Settings.ACTION_WIFI_SETTINGS)
-                    requestSettingEnabled(
-                        context.getString(R.string.enable_wifi_dialog_title),
-                        context.getString(R.string.enable_wifi_dialog_content),
-                        wifiIntent
-                    )
-                    false
-                }
-                else if (!isLocationEnabled()) {
-                    val locationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                    requestSettingEnabled(
-                        context.getString(R.string.enable_location_dialog_title),
-                        context.getString(R.string.enable_location_dialog_content),
-                        locationIntent
-                    )
-                    false
-                }
-                // (isWifiEnabled() && isLocationEnabled())
-                else {
-                    onStart()
-                    true
-                }
-            }
-        )
+    override fun doStartMonitoring(): Boolean {
+        if (!isWifiEnabled()) {
+            val wifiIntent = Intent(Settings.ACTION_WIFI_SETTINGS)
+            requestSettingEnabled(
+                context.getString(R.string.enable_wifi_dialog_title),
+                context.getString(R.string.enable_wifi_dialog_content),
+                wifiIntent
+            )
+            return false
+        }
+        else if (!isLocationEnabled()) {
+            val locationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            requestSettingEnabled(
+                context.getString(R.string.enable_location_dialog_title),
+                context.getString(R.string.enable_location_dialog_content),
+                locationIntent
+            )
+            return false
+        }
+        else {
+            return true
+        }
     }
 
     override fun doStopMonitoring(): Boolean {
-        return checkStateOrFail(MonitorState.STARTED, {
-            true
-        })
+        // only monitor with no proper state
+        return true
     }
 
     // value read in dBm
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    override fun readValue(): Double {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                //TODO: implement signal monitoring for both any network and only the connected one
-                val scanResults: List<ScanResult> = wifiManager.scanResults
-                if (scanResults.isEmpty()) { 0.0 }
-                else {
-                    // Calculate average signal strength in dBm
-                    val totalSignalStrength = scanResults.sumBy { it.level }
-                    val averageSignalStrength = totalSignalStrength.toDouble() / scanResults.size
-                    val classification = classifySignalStrength(averageSignalStrength)
+    override fun doReadValue(): Double {
+        //TODO: implement signal monitoring for both any network and only the connected one
+        //should work like this: use currently connected one, if not available scan everything
+        val scanResults: List<ScanResult> = wifiManager.scanResults
+        if (scanResults.isEmpty()) {
+            return 0.0
+        } else {
+            // Calculate average signal strength in dBm
+            val totalSignalStrength = scanResults.sumBy { it.level }
 
-                    dbManager.storeWifiMeasurement(averageSignalStrength, classification)
-                    averageSignalStrength
-                }
-            }
-        )
+            return totalSignalStrength.toDouble() / scanResults.size
+        }
     }
 
     override fun classifySignalStrength(dB: Double): Classification {

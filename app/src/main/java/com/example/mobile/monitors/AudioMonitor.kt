@@ -6,7 +6,6 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
 import com.example.mobile.database.Classification
-import com.example.mobile.database.DbManager
 import kotlin.math.log10
 import kotlin.math.sqrt
 
@@ -24,52 +23,33 @@ class AudioMonitor(context: Context): Monitor(context) {
     }
 
     @RequiresPermission(value = "android.permission.RECORD_AUDIO")
-    override fun doStartMonitoring(onStart: () -> Unit): Boolean {
-        return checkStateOrFail(
-            MonitorState.CREATED,
-            {
-                audioRecorder = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    sampleFrequency,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
-                audioRecorder?.startRecording()
-                onStart()
-                true
-            }
+    override fun doStartMonitoring(): Boolean {
+        audioRecorder = AudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            sampleFrequency,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            bufferSize
         )
+        audioRecorder?.startRecording()
+        return true
     }
 
     override fun doStopMonitoring(): Boolean {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                audioRecorder?.stop()
-                audioRecorder?.release()
-                audioRecorder = null
-                true
-            }
-        )
+        audioRecorder?.stop()
+        audioRecorder?.release()
+        audioRecorder = null
+        return true
     }
 
-    override fun readValue(): Double {
-        return checkStateOrFail(
-            MonitorState.STARTED,
-            {
-                val buffer = ShortArray(bufferSize)
-                audioRecorder?.read(buffer, 0, bufferSize)
-                // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
-                // reference: https://en.m.wikipedia.org/wiki/DBFS
-                val rms = rootMeanSquared(buffer)
-                val decibelValue = decibelFromRms(rms)
-                val classification = classifySignalStrength(decibelValue)
+    override fun doReadValue(): Double {
+        val buffer = ShortArray(bufferSize)
+        audioRecorder?.read(buffer, 0, bufferSize)
+        // i dB sono calcolati come dBFS dato che stiamo lavorando con segnali digitali
+        // reference: https://en.m.wikipedia.org/wiki/DBFS
+        val rms = rootMeanSquared(buffer)
 
-                dbManager.storeAudioMeasurement(decibelValue, classification)
-                decibelValue
-            }
-        )
+        return decibelFromRms(rms)
     }
 
     override fun classifySignalStrength(dB: Double): Classification {

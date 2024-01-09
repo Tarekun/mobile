@@ -19,11 +19,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.mobile.composables.OptionSelect
+import com.example.mobile.database.DbManager
 import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.screens.MonitoringScreen
+import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
 
 
@@ -44,6 +46,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        DbManager.init(applicationContext)
+
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var showSettings by mutableStateOf(false)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
@@ -61,6 +65,7 @@ class MainActivity : ComponentActivity() {
                                 OptionSelect(
                                     label = "Select Monitor",
                                     options = monitors,
+                                    value = inUseMonitor,
                                     onChange = { inUseMonitor = it },
                                     defaultOption = MonitorVariant.AUDIO
                                 )
@@ -86,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                     ) {
                         if (showSettings) {
-
+                            SettingsScreen(variant = inUseMonitor)
                         }
                         else when (inUseMonitor) {
                             MonitorVariant.AUDIO -> MonitoringScreen(context = this@MainActivity, audioMonitor)

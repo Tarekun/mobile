@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.mobile.database.MonitorSettings
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
 import kotlin.math.roundToInt
@@ -24,20 +25,18 @@ import kotlin.math.roundToInt
 fun MonitorInfobox(
     variant: MonitorVariant,
     monitorStatus: MonitorState,
+    monitorSettings: MonitorSettings,
     value: Double
 ) {
     val twoDecimalValue = (value * 100.0).roundToInt() / 100.0
     val firstColumnLength = 200.dp
     //to avoid duplicate code
-    val names = listOf(
-        "Selected monitor:",
-        "Status:",
-        "Recorded value:"
-    )
-    val values = listOf(
-        variant.name,
-        if (monitorStatus == MonitorState.STARTED) "In use" else "Paused",
-        "$twoDecimalValue ${if (variant == MonitorVariant.AUDIO) "dBFS" else "dBm"}"
+    val infoLabels = mapOf<String, String>(
+        Pair("Selected monitor:", variant.name),
+        Pair("Status:", if (monitorStatus == MonitorState.STARTED) "In use" else "Paused"),
+        Pair("Recorded value:", "$twoDecimalValue ${if (variant == MonitorVariant.AUDIO) "dBFS" else "dBm"}"),
+        Pair("Monitoring period:", monitorSettings.monitorPeriod.toString()),
+        Pair("Counted measurements:", monitorSettings.measurementNumber.toString()),
     )
 
     val roundedCornerShape: Shape = MaterialTheme.shapes.small
@@ -48,20 +47,20 @@ fun MonitorInfobox(
             .border(1.dp, Color.Gray, roundedCornerShape)
             .clip(roundedCornerShape)
     ) {
-        names.forEachIndexed { index, infoName ->
+        infoLabels.keys.forEach { label ->
             Row(
                 modifier = Modifier
                     .padding(8.dp)
             ) {
                 Text(
-                    text = infoName,
+                    text = label,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .width(firstColumnLength)
                 )
 
                 Text(
-                    text = values[index],
+                    text = infoLabels[label] ?: "",
                     color = Color.Gray,
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.small)

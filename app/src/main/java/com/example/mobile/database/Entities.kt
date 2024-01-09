@@ -48,9 +48,6 @@ data class Settings(
 
 @Dao
 interface SettingsDao {
-    enum class SettingsNames {
-        AUDIO_MONITOR_PERIOD,WIFI_MONITOR_PERIOD,LTE_MONITOR_PERIOD
-    }
     @Query("SELECT * FROM settings WHERE name = :name")
     fun findByName(name: String): Settings?
 
@@ -59,4 +56,7 @@ interface SettingsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertOrUpdateSetting(setting: Settings)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertOrUpdateAllSettings(settings: List<Settings>)
 }
