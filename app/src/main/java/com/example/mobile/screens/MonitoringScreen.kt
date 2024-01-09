@@ -85,6 +85,7 @@ fun MonitoringScreen(
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
+                    //TODO: increase number of measurements taken
                     value = monitor.readValue()
                     delay(monitorSettings!!.monitorPeriod)
                 }
