@@ -8,19 +8,21 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.example.mobile.monitors.MonitorVariant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.util.Date
 
 const val DATABASE_NAME = "mydatabase.db"
 
 private class Converters {
     @TypeConverter
-    fun fromTimestamp(value: Long): Date {
-        return value.let { Date(it) }
+    fun fromTimestamp(value: Long): Instant {
+        return value.let { Instant.fromEpochMilliseconds(value) }
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date): Long {
-        return date.time
+    fun dateToTimestamp(date: Instant): Long {
+        return date.toEpochMilliseconds()
     }
 
     @TypeConverter
@@ -86,10 +88,14 @@ object DbManager {
             decibels,
             classification,
             monitor.name,
-            Date(System.currentTimeMillis())
+            Clock.System.now()
         )
 
          measurementDao.insert(measurement)
+    }
+
+    fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant.name)
     }
 
     fun getAllMeasurements(): List<Measurement> {
