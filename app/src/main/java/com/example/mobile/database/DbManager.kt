@@ -8,19 +8,22 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.example.mobile.monitors.MonitorVariant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import java.lang.IllegalArgumentException
 import java.util.Date
 
 const val DATABASE_NAME = "mydatabase.db"
 
 private class Converters {
     @TypeConverter
-    fun fromTimestamp(value: Long): Date {
-        return value.let { Date(it) }
+    fun fromTimestamp(value: Long): Instant {
+        return value.let { Instant.fromEpochMilliseconds(value) }
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date): Long {
-        return date.time
+    fun dateToTimestamp(date: Instant): Long {
+        return date.toEpochMilliseconds()
     }
 
     @TypeConverter
@@ -38,6 +41,24 @@ private class Converters {
             4 -> Classification.MIN
             else -> Classification.INVALID
         }
+    }
+
+    @TypeConverter
+    fun variantToString(variant: MonitorVariant): String {
+        return variant.toString()
+    }
+
+    @TypeConverter
+    fun stringToVariant(variant: String): MonitorVariant {
+        for (monitorVariant in enumValues<MonitorVariant>()) {
+            if (variant == monitorVariant.toString()) {
+                return monitorVariant
+            }
+        }
+        throw IllegalArgumentException(
+            "The illegal monitor variant string \"${variant}\" was required. " +
+            "Only possible values are ${MonitorVariant.values().map { "${it.name} " }}"
+        )
     }
 }
 
@@ -76,7 +97,7 @@ object DbManager {
         settingsDao = db.settingsDao()
     }
 
-    private fun storeMeasurement(
+    fun storeMeasurement(
         decibels: Double,
         classification: Classification,
         monitor: MonitorVariant
@@ -85,52 +106,19 @@ object DbManager {
             0,
             decibels,
             classification,
-            monitor.name,
-            Date(System.currentTimeMillis())
+            monitor,
+            Clock.System.now()
         )
 
          measurementDao.insert(measurement)
     }
 
-    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
-    }
-
-    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.WIFI)
-    }
-
-    fun storeMobileMeasurement(decibels: Double, classification: Classification) {
-        storeMeasurement(decibels, classification, MonitorVariant.LTE)
+    fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant.name)
     }
 
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
-    }
-
-    fun findPeriodForMonitor(variant: MonitorVariant): Long? {
-        val intervalSetting = settingsDao.findByName(
-            when (variant) {
-                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
-            }
-        )
-
-        return intervalSetting?.value?.toLong()
-    }
-
-    fun updatePeriodForMonitor(variant: MonitorVariant, period: Long) {
-        val setting = Settings(
-            //name selection
-            when (variant) {
-                MonitorVariant.AUDIO -> SettingsNames.AUDIO_MONITOR_PERIOD.name
-                MonitorVariant.WIFI -> SettingsNames.WIFI_MONITOR_PERIOD.name
-                MonitorVariant.LTE -> SettingsNames.LTE_MONITOR_PERIOD.name
-            },
-            period.toString()
-        )
-        settingsDao.insertOrUpdateSetting(setting)
     }
 
     fun findSettingByName(name: String): Settings? {

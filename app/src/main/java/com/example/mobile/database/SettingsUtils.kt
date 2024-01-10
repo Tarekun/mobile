@@ -1,6 +1,33 @@
 package com.example.mobile.database
 
-import com.example.mobile.monitors.MonitorVariant
+import androidx.room.Dao
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+
+@Entity(tableName = "settings")
+data class Settings(
+    @PrimaryKey
+    val name: String,
+    val value: String
+)
+
+@Dao
+interface SettingsDao {
+    @Query("SELECT * FROM settings WHERE name = :name")
+    fun findByName(name: String): Settings?
+
+    @Query("SELECT * FROM settings")
+    fun getAllSettings(): List<Settings>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertOrUpdateSetting(setting: Settings)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertOrUpdateAllSettings(settings: List<Settings>)
+}
 
 enum class SettingsNames {
     AUDIO_MONITOR_PERIOD,

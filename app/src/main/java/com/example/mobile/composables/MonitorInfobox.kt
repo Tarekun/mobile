@@ -37,6 +37,7 @@ fun MonitorInfobox(
         Pair("Recorded value:", "$twoDecimalValue ${if (variant == MonitorVariant.AUDIO) "dBFS" else "dBm"}"),
         Pair("Monitoring period:", monitorSettings.monitorPeriod.toString()),
         Pair("Counted measurements:", monitorSettings.measurementNumber.toString()),
+        //TODO: add number of measurements taken per single monitor
     )
 
     val roundedCornerShape: Shape = MaterialTheme.shapes.small
