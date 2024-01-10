@@ -62,10 +62,11 @@ private class Converters {
     }
 }
 
-@Database(entities = [Measurement::class, Settings::class], version = 1, exportSchema = false)
+@Database(entities = [Measurement::class, ExternalMeasurement::class, Settings::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun measurementDao(): MeasurementDao
+    abstract fun externalMeasurementDao(): ExternalMeasurementDao
     abstract fun settingsDao(): SettingsDao
 
     companion object {
@@ -89,11 +90,13 @@ abstract class AppDatabase : RoomDatabase() {
 object DbManager {
     private lateinit var db: AppDatabase
     private lateinit var measurementDao: MeasurementDao
+    private lateinit var externalMeasurementDao: ExternalMeasurementDao
     private lateinit var settingsDao: SettingsDao
 
     fun init(applicationContext: Context) {
         db = AppDatabase.getDatabase(applicationContext)
         measurementDao = db.measurementDao()
+        externalMeasurementDao = db.externalMeasurementDao()
         settingsDao = db.settingsDao()
     }
 
@@ -113,12 +116,20 @@ object DbManager {
          measurementDao.insert(measurement)
     }
 
+    fun storeManyExternalMeasurement(measurements: List<ExternalMeasurement>) {
+        externalMeasurementDao.insertMany(measurements)
+    }
+
     fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
         return measurementDao.getAllMeasurementsPerMonitor(variant.name)
     }
 
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
+    }
+
+    fun getAllExternalMeasurements(): List<ExternalMeasurement> {
+        return externalMeasurementDao.getAllExternalMeasurements()
     }
 
     fun findSettingByName(name: String): Settings? {
