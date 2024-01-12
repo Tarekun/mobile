@@ -28,9 +28,11 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
+import com.example.mobile.notification.NotificationHelper
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.NavigationHistory
+import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
@@ -55,10 +57,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         DbManager.init(applicationContext)
+        NotificationHelper.init(applicationContext)
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
+        var endpointId: String
 
         val history = NavigationHistory(currentScreen)
         fun navigateTo(screen: Screens) {
@@ -66,10 +70,17 @@ class MainActivity : ComponentActivity() {
             currentScreen = history.currentScreen
         }
         fun navigateBack() {
-            history.navigateBack()
-            currentScreen = history.currentScreen
+            if (!history.isLast()) {
+                history.navigateBack()
+                currentScreen = history.currentScreen
+            }
         }
 
+        endpointId = intent.getStringExtra("endpointId") ?: ""
+        if (endpointId != "") {
+            navigateTo(Screens.PROXIMITY_SHARE)
+        }
+//        navigateTo(Screens.EXPORT)
         setContent {
             MobileTheme {
                 Scaffold(
@@ -95,6 +106,7 @@ class MainActivity : ComponentActivity() {
                                         // otherwise it's the navigate back
                                         Screens.SETTINGS -> navigateBack()
                                         Screens.EXPORT -> navigateBack()
+                                        Screens.PROXIMITY_SHARE -> navigateBack()
                                     }
                                 }) {
                                     Icon(
@@ -135,6 +147,10 @@ class MainActivity : ComponentActivity() {
                                 ExportScreen(
                                     variant = inUseMonitor,
                                     startIntent = { this@MainActivity.startActivity(it) },
+                                )
+                            Screens.PROXIMITY_SHARE ->
+                                ProximityShareScreen(
+                                    endpointId = endpointId
                                 )
                         }
                     }

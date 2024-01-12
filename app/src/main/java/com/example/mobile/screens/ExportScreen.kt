@@ -3,6 +3,7 @@ package com.example.mobile.screens
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,12 +21,25 @@ import androidx.core.content.FileProvider
 import com.example.mobile.R
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.monitors.MonitorVariant
+import com.example.mobile.notification.NotificationHelper
+import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.AdvertisingOptions
+import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
+import com.google.android.gms.nearby.connection.ConnectionResolution
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
+import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.google.android.gms.nearby.connection.DiscoveryOptions
+import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.PayloadCallback
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.File.createTempFile
-import java.io.InputStream
 
 const val dumpMimeType: String = "application/json"
 
@@ -41,11 +55,9 @@ fun ExportScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { selectedUri: Uri ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    val inputStream = context.contentResolver.openInputStream(selectedUri)
-                    inputStream?.use {
-                        val content = it.bufferedReader().use { reader -> reader.readText() }
-                        MeasurementsUtils.storeExternalDump(content)
-                    }
+                    MeasurementsUtils.storeJsonDumpUri(
+                        context.contentResolver.openInputStream(selectedUri)
+                    )
                 }
             }
         }
@@ -77,6 +89,59 @@ fun ExportScreen(
         fileSelector.launch(fileSelectionIntent)
     }
 
+
+    //TODO: initialize properly
+    val serviceId: String = "service"
+    val strategy = Strategy.P2P_POINT_TO_POINT
+
+    fun notifyUser(endpointId: String) {
+        NotificationHelper.sendNotification("Share db", "Found new endpoint with id $endpointId", context, endpointId)
+    }
+
+
+    val discoveryCallback = object : EndpointDiscoveryCallback() {
+        override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
+            // Send notification
+            notifyUser(endpointId)
+        }
+
+        override fun onEndpointLost(endpointId: String) { }
+    }
+    val sendConnectionCallback = makeSendConnectionCallback(context)
+
+    fun startAdvertising() {
+        val advertisingOptions: AdvertisingOptions = AdvertisingOptions
+            .Builder()
+            .setStrategy(strategy)
+            .build()
+
+        Nearby.getConnectionsClient(context)
+            .startAdvertising(
+                // TODO: make this some kind of username?
+                "local name",
+                serviceId,
+                sendConnectionCallback,
+                advertisingOptions
+            ).addOnFailureListener {
+                Log.d("mio", "fallimento advertising: ${it.message}")
+            }
+    }
+    fun startDiscovery() {
+        val discoveryOptions: DiscoveryOptions = DiscoveryOptions
+            .Builder()
+            .setStrategy(strategy)
+            .build()
+
+        Nearby.getConnectionsClient(context)
+            .startDiscovery(
+                serviceId,
+                discoveryCallback,
+                discoveryOptions
+            ).addOnFailureListener {
+                Log.d("mio", "fallimento discovery")
+            }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -100,7 +165,7 @@ fun ExportScreen(
         }
         OutlinedButton(
             onClick = {
-                //TODO
+                notifyUser("123")
             },
             modifier = spacing
         ) {

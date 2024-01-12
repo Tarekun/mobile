@@ -72,15 +72,6 @@ fun MonitoringScreen(
     }
 
     fun startRoutine() {
-        // aggiunto così l'ide non si lamenta della chiamata a `readValue` nella coroutine
-//        if (ActivityCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.RECORD_AUDIO
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            return
-//        }
-
         value = 0.0
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
