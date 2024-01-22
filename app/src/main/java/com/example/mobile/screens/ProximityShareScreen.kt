@@ -75,9 +75,7 @@ fun makePayloadCallback(context: Context): PayloadCallback {
         }
     }
 }
-fun makeSendConnectionCallback(
-    context: Context
-): ConnectionLifecycleCallback {
+fun makeSendConnectionCallback(context: Context): ConnectionLifecycleCallback {
     return object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
             Nearby.getConnectionsClient(context)
@@ -125,6 +123,7 @@ fun ProximityShareScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .padding(16.dp)
             .fillMaxSize(),
     ) {
         OutlinedButton(

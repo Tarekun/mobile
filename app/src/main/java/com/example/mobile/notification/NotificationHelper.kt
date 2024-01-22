@@ -8,17 +8,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.mobile.MainActivity
 import com.example.mobile.R
-import com.example.mobile.database.AppDatabase
-import com.example.mobile.database.DbManager
 
 object NotificationHelper {
     private const val PROXIMITY_SHARE_CHANNEL = "PROXIMITY_SHARE_CHANNEL"
+    public const val extraEndpointId = "endpointId"
 
     private lateinit var notificationManager: NotificationManager
 
@@ -37,6 +35,11 @@ object NotificationHelper {
         }
     }
 
+    private fun generateNotificationId(): Int {
+        // generates a unique ID using the current timestamp
+        return System.currentTimeMillis().toInt()
+    }
+
     fun sendNotification(
         title: String,
         content: String,
@@ -44,13 +47,13 @@ object NotificationHelper {
         endpointId: String
     ) {
         val intent = Intent(context, MainActivity::class.java)
-        intent.putExtra("endpointId", endpointId)
+        intent.putExtra(extraEndpointId, endpointId)
         val pendingIntent = PendingIntent.getActivity(
             context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val builder = NotificationCompat.Builder(context, PROXIMITY_SHARE_CHANNEL)
             //TODO: check this icon
-            .setSmallIcon(R.mipmap.ic_launcher) // Set your notification icon
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(content)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -63,7 +66,7 @@ object NotificationHelper {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                notify( 1, builder.build())
+                notify( generateNotificationId(), builder.build())
             }
         }
     }

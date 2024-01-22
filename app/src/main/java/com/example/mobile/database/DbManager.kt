@@ -143,4 +143,8 @@ object DbManager {
     fun updateAllSettings(settings: List<Settings>) {
         settingsDao.insertOrUpdateAllSettings(settings)
     }
+
+    fun updateSingleSetting(setting: Settings) {
+        settingsDao.insertOrUpdateSetting(setting)
+    }
 }

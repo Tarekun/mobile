@@ -36,7 +36,8 @@ enum class SettingsNames {
     AUDIO_MEASUREMENT_NUMBER,
     WIFI_MEASUREMENT_NUMBER,
     LTE_MEASUREMENT_NUMBER,
-    GRID_UNIT_LENGTH
+    GRID_UNIT_LENGTH,
+    ENABLE_PROXIMITY_SHARE,
 }
 
 data class MonitorSettings(
@@ -49,6 +50,7 @@ data class SettingsTable(
     val wifi: MonitorSettings = MonitorSettings(1000 * 60, 10),
     val lte: MonitorSettings = MonitorSettings(1000 * 60, 10),
     val gridUnitLength: Int = 10,
+    val enableProximityShare: Boolean = false,
 )
 
 object SettingsUtils {
@@ -72,6 +74,7 @@ object SettingsUtils {
                 (map[SettingsNames.LTE_MEASUREMENT_NUMBER.name] ?: "").toInt(),
             ),
             (map[SettingsNames.GRID_UNIT_LENGTH.name] ?: "").toInt(),
+            (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean()
         )
     }
 
@@ -84,6 +87,7 @@ object SettingsUtils {
             Settings(SettingsNames.WIFI_MEASUREMENT_NUMBER.name, settings.wifi.measurementNumber.toString()),
             Settings(SettingsNames.LTE_MEASUREMENT_NUMBER.name, settings.lte.measurementNumber.toString()),
             Settings(SettingsNames.GRID_UNIT_LENGTH.name, settings.gridUnitLength.toString()),
+            Settings(SettingsNames.ENABLE_PROXIMITY_SHARE.name, settings.enableProximityShare.toString()),
         )
     }
 
@@ -108,5 +112,9 @@ object SettingsUtils {
 
     fun updateSettings(settings: SettingsTable) {
         DbManager.updateAllSettings(makeSettingsList(settings))
+    }
+
+    fun updateSingleSetting(setting: SettingsNames, value: String) {
+        DbManager.updateSingleSetting(Settings(setting.name, value))
     }
 }

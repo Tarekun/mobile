@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.mobile.R
 import com.example.mobile.database.MeasurementsUtils
+import com.example.mobile.database.MonitorSettings
+import com.example.mobile.database.SettingsNames
+import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.notification.NotificationHelper
 import com.google.android.gms.nearby.Nearby
@@ -38,6 +46,7 @@ import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.File.createTempFile
 
@@ -50,6 +59,8 @@ fun ExportScreen(
 ) {
     val context = LocalContext.current
     val spacing = Modifier.padding(bottom = 16.dp)
+
+    var enableProximityShare: Boolean by remember { mutableStateOf(false) }
 
     val fileSelector = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -95,13 +106,17 @@ fun ExportScreen(
     val strategy = Strategy.P2P_POINT_TO_POINT
 
     fun notifyUser(endpointId: String) {
-        NotificationHelper.sendNotification("Share db", "Found new endpoint with id $endpointId", context, endpointId)
+        NotificationHelper.sendNotification(
+            context.getString(R.string.notification_title_endpoint_found),
+            context.getString(R.string.notification_content_endpoint_found) + " " + endpointId,
+            context,
+            endpointId
+        )
     }
 
 
     val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            // Send notification
             notifyUser(endpointId)
         }
 
@@ -141,6 +156,36 @@ fun ExportScreen(
                 Log.d("mio", "fallimento discovery")
             }
     }
+    fun stopAdvertising() {
+        Nearby.getConnectionsClient(context)
+            .stopAdvertising()
+    }
+    fun stopDiscovery() {
+        Nearby.getConnectionsClient(context)
+            .stopDiscovery()
+    }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            enableProximityShare = SettingsUtils.getStoredSettings().enableProximityShare
+        }
+        notifyUser("ENDPOINTID")
+    }
+    LaunchedEffect(enableProximityShare) {
+        withContext(Dispatchers.IO) {
+            SettingsUtils.updateSingleSetting(SettingsNames.ENABLE_PROXIMITY_SHARE, enableProximityShare.toString())
+            // sharing was just enabled
+            if (enableProximityShare) {
+                startAdvertising()
+                startDiscovery()
+            }
+            // otherwise sharing was just disabled
+            else {
+                stopAdvertising()
+                stopDiscovery()
+            }
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -165,12 +210,13 @@ fun ExportScreen(
         }
         OutlinedButton(
             onClick = {
-                notifyUser("123")
+                enableProximityShare = !enableProximityShare
             },
             modifier = spacing
         ) {
             Text(text = context.getString(
-                R.string.exportscreen_proximity_enabled
+                if (enableProximityShare) R.string.exportscreen_proximity_enabled
+                else R.string.exportscreen_proximity_disabled
             ))
         }
     }

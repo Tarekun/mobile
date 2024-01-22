@@ -62,7 +62,6 @@ class MainActivity : ComponentActivity() {
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
         val monitors = listOf(MonitorVariant.AUDIO, MonitorVariant.WIFI, MonitorVariant.LTE)
-        var endpointId: String
 
         val history = NavigationHistory(currentScreen)
         fun navigateTo(screen: Screens) {
@@ -76,11 +75,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        endpointId = intent.getStringExtra("endpointId") ?: ""
+        var endpointId: String
+        endpointId = intent.getStringExtra(NotificationHelper.extraEndpointId) ?: ""
         if (endpointId != "") {
             navigateTo(Screens.PROXIMITY_SHARE)
         }
-//        navigateTo(Screens.EXPORT)
+        else navigateTo(Screens.EXPORT)
         setContent {
             MobileTheme {
                 Scaffold(
@@ -100,13 +100,13 @@ class MainActivity : ComponentActivity() {
                             },
                             navigationIcon = {
                                 IconButton(onClick = {
-                                    when (currentScreen) {
-                                        // on the monitoring screen this is the settings button
-                                        Screens.MONITORING -> navigateTo(Screens.SETTINGS)
-                                        // otherwise it's the navigate back
-                                        Screens.SETTINGS -> navigateBack()
-                                        Screens.EXPORT -> navigateBack()
-                                        Screens.PROXIMITY_SHARE -> navigateBack()
+                                    // on the monitoring screen this is the settings button
+                                    if (currentScreen == Screens.MONITORING) {
+                                        navigateTo(Screens.SETTINGS)
+                                    }
+                                    // otherwise it's the navigate back
+                                    else {
+                                        navigateBack()
                                     }
                                 }) {
                                     Icon(
