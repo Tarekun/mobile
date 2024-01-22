@@ -233,10 +233,10 @@ fun SettingsScreen(
     if (initializing)
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     else Column {
-        AlertTextbox(
-            severity = AlertSeverity.INFO,
-            content = LocalContext.current.getString(R.string.settings_alert_note)
-        )
+//        AlertTextbox(
+//            severity = AlertSeverity.INFO,
+//            content = LocalContext.current.getString(R.string.settings_alert_note)
+//        )
 
         NumberSetting(
             title = context.getString(R.string.period_setting_title),

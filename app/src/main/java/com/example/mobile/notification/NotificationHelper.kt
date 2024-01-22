@@ -16,6 +16,7 @@ import com.example.mobile.R
 
 object NotificationHelper {
     private const val PROXIMITY_SHARE_CHANNEL = "PROXIMITY_SHARE_CHANNEL"
+    private const val REQUEST_CODE = 0
     public const val extraEndpointId = "endpointId"
 
     private lateinit var notificationManager: NotificationManager
@@ -49,7 +50,7 @@ object NotificationHelper {
         val intent = Intent(context, MainActivity::class.java)
         intent.putExtra(extraEndpointId, endpointId)
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            context, REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val builder = NotificationCompat.Builder(context, PROXIMITY_SHARE_CHANNEL)
             //TODO: check this icon

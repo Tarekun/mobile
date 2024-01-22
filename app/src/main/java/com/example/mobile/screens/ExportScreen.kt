@@ -7,9 +7,18 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -51,6 +61,8 @@ import java.io.File
 import java.io.File.createTempFile
 
 const val dumpMimeType: String = "application/json"
+const val serviceId: String = "proximityShare"
+val strategy = Strategy.P2P_POINT_TO_POINT
 
 @Composable
 fun ExportScreen(
@@ -101,10 +113,6 @@ fun ExportScreen(
     }
 
 
-    //TODO: initialize properly
-    val serviceId: String = "service"
-    val strategy = Strategy.P2P_POINT_TO_POINT
-
     fun notifyUser(endpointId: String) {
         NotificationHelper.sendNotification(
             context.getString(R.string.notification_title_endpoint_found),
@@ -124,6 +132,7 @@ fun ExportScreen(
     }
     val sendConnectionCallback = makeSendConnectionCallback(context)
 
+    //TODO: change the failureListener to proper handling
     fun startAdvertising() {
         val advertisingOptions: AdvertisingOptions = AdvertisingOptions
             .Builder()
@@ -141,6 +150,7 @@ fun ExportScreen(
                 Log.d("mio", "fallimento advertising: ${it.message}")
             }
     }
+    //TODO: change the failureListener to proper handling
     fun startDiscovery() {
         val discoveryOptions: DiscoveryOptions = DiscoveryOptions
             .Builder()
@@ -169,7 +179,7 @@ fun ExportScreen(
         withContext(Dispatchers.IO) {
             enableProximityShare = SettingsUtils.getStoredSettings().enableProximityShare
         }
-        notifyUser("ENDPOINTID")
+//        notifyUser("ENDPOINTID")
     }
     LaunchedEffect(enableProximityShare) {
         withContext(Dispatchers.IO) {
@@ -214,6 +224,11 @@ fun ExportScreen(
             },
             modifier = spacing
         ) {
+            Icon(
+                imageVector = if (enableProximityShare) Icons.Default.Check
+                    else Icons.Filled.Clear,
+                contentDescription = "Control proximity share functionality"
+            )
             Text(text = context.getString(
                 if (enableProximityShare) R.string.exportscreen_proximity_enabled
                 else R.string.exportscreen_proximity_disabled

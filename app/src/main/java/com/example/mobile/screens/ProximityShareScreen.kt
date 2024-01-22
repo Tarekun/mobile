@@ -104,18 +104,14 @@ fun ProximityShareScreen(
     val context = LocalContext.current
     val spacing = Modifier.padding(bottom = 16.dp)
 
-
-    fun requestConnection(endpointId: String) {
+    //TODO: change the failureListener to proper handling
+    fun requestConnection() {
         Nearby.getConnectionsClient(context)
             .requestConnection(
                 "local name",
                 endpointId,
                 makeSendConnectionCallback(context)
-            ).addOnSuccessListener {
-                Log.d("mio", "successo request connection")
-                // send notification
-            }
-            .addOnFailureListener {
+            ).addOnFailureListener {
                 Log.d("mio", "fallimento request connection")
             }
     }
@@ -128,7 +124,7 @@ fun ProximityShareScreen(
     ) {
         OutlinedButton(
             onClick = {
-                requestConnection(endpointId)
+                requestConnection()
             },
             modifier = spacing
         ) {

@@ -75,12 +75,11 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        var endpointId: String
-        endpointId = intent.getStringExtra(NotificationHelper.extraEndpointId) ?: ""
+        val endpointId = intent.getStringExtra(NotificationHelper.extraEndpointId) ?: ""
         if (endpointId != "") {
             navigateTo(Screens.PROXIMITY_SHARE)
         }
-        else navigateTo(Screens.EXPORT)
+
         setContent {
             MobileTheme {
                 Scaffold(
