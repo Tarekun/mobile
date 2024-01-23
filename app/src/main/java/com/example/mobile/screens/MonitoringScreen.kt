@@ -2,6 +2,7 @@ package com.example.mobile.screens
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.example.mobile.R
 import com.example.mobile.composables.MonitorInfobox
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.MonitorSettings
@@ -97,7 +99,17 @@ fun MonitoringScreen(
             startMonitoring()
         }
         else {
-            //TODO: explain that the permission is needed and maybe take to the settings
+            val dialog = AlertDialog.Builder(context)
+                .setTitle(context.getString(R.string.permission_failed_dialog_title))
+                .setMessage(context.getString(R.string.permission_failed_dialog_content))
+                .setNegativeButton(
+                    context.getString(R.string.cancel_button_text)
+                ) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+
+            dialog.show()
         }
     }
 
