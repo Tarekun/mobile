@@ -28,6 +28,7 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
+import com.example.mobile.notification.LocationManager
 import com.example.mobile.notification.NotificationHelper
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
@@ -51,13 +52,17 @@ class MainActivity : ComponentActivity() {
         LteMonitor(applicationContext)
     }
 
+    private fun initializeSingletons() {
+        DbManager.init(applicationContext)
+        NotificationHelper.init(applicationContext)
+        LocationManager.init(this)
+    }
+
     // TopAppBar è ancora in modalità experimental
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        DbManager.init(applicationContext)
-        NotificationHelper.init(applicationContext)
+        initializeSingletons()
 
         var inUseMonitor: MonitorVariant by mutableStateOf(MonitorVariant.AUDIO)
         var currentScreen: Screens by mutableStateOf(Screens.MONITORING)
