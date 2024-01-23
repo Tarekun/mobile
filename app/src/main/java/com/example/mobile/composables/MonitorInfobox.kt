@@ -10,6 +10,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -26,9 +31,12 @@ fun MonitorInfobox(
     variant: MonitorVariant,
     monitorStatus: MonitorState,
     monitorSettings: MonitorSettings,
-    value: Double
+    currentValue: Double,
+    measurementsNumber: Int,
+    externalMeasurementsNumber: Int,
 ) {
-    val twoDecimalValue = (value * 100.0).roundToInt() / 100.0
+
+    val twoDecimalValue = (currentValue * 100.0).roundToInt() / 100.0
     val firstColumnLength = 200.dp
     //to avoid duplicate code
     val infoLabels = mapOf<String, String>(
@@ -37,7 +45,8 @@ fun MonitorInfobox(
         Pair("Recorded value:", "$twoDecimalValue ${if (variant == MonitorVariant.AUDIO) "dBFS" else "dBm"}"),
         Pair("Monitoring period:", monitorSettings.monitorPeriod.toString()),
         Pair("Counted measurements:", monitorSettings.measurementNumber.toString()),
-        //TODO: add number of measurements taken per single monitor
+        Pair("Local measurements:", measurementsNumber.toString()),
+        Pair("Imported measurements:", externalMeasurementsNumber.toString()),
     )
 
     val roundedCornerShape: Shape = MaterialTheme.shapes.small

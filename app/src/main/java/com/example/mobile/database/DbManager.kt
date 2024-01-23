@@ -121,7 +121,15 @@ object DbManager {
     }
 
     fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
-        return measurementDao.getAllMeasurementsPerMonitor(variant.name)
+        return measurementDao.getAllMeasurementsPerMonitor(variant)
+    }
+
+    fun countMeasurement(variant: MonitorVariant): Int {
+        return measurementDao.countMeasurementsPerMonitor(variant)
+    }
+
+    fun countExternalMeasurement(variant: MonitorVariant): Int {
+        return externalMeasurementDao.countExternalMeasurementsPerMonitor(variant)
     }
 
     fun getAllMeasurements(): List<Measurement> {
@@ -142,5 +150,9 @@ object DbManager {
 
     fun updateAllSettings(settings: List<Settings>) {
         settingsDao.insertOrUpdateAllSettings(settings)
+    }
+
+    fun updateSingleSetting(setting: Settings) {
+        settingsDao.insertOrUpdateSetting(setting)
     }
 }

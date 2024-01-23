@@ -3,31 +3,66 @@ package com.example.mobile.screens
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.mobile.R
 import com.example.mobile.database.MeasurementsUtils
+import com.example.mobile.database.MonitorSettings
+import com.example.mobile.database.SettingsNames
+import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
+import com.example.mobile.notification.NotificationHelper
+import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.AdvertisingOptions
+import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
+import com.google.android.gms.nearby.connection.ConnectionResolution
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
+import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.google.android.gms.nearby.connection.DiscoveryOptions
+import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.PayloadCallback
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.File.createTempFile
-import java.io.InputStream
 
 const val dumpMimeType: String = "application/json"
+const val serviceId: String = "proximityShare"
+val strategy = Strategy.P2P_POINT_TO_POINT
 
 @Composable
 fun ExportScreen(
@@ -37,15 +72,15 @@ fun ExportScreen(
     val context = LocalContext.current
     val spacing = Modifier.padding(bottom = 16.dp)
 
+    var enableProximityShare: Boolean by remember { mutableStateOf(false) }
+
     val fileSelector = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { selectedUri: Uri ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    val inputStream = context.contentResolver.openInputStream(selectedUri)
-                    inputStream?.use {
-                        val content = it.bufferedReader().use { reader -> reader.readText() }
-                        MeasurementsUtils.storeExternalDump(content)
-                    }
+                    MeasurementsUtils.storeJsonDumpUri(
+                        context.contentResolver.openInputStream(selectedUri)
+                    )
                 }
             }
         }
@@ -77,6 +112,91 @@ fun ExportScreen(
         fileSelector.launch(fileSelectionIntent)
     }
 
+
+    fun notifyUser(endpointId: String) {
+        NotificationHelper.sendNotification(
+            context.getString(R.string.notification_title_endpoint_found),
+            context.getString(R.string.notification_content_endpoint_found) + " " + endpointId,
+            context,
+            endpointId
+        )
+    }
+
+
+    val discoveryCallback = object : EndpointDiscoveryCallback() {
+        override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
+            notifyUser(endpointId)
+        }
+
+        override fun onEndpointLost(endpointId: String) { }
+    }
+    val sendConnectionCallback = makeSendConnectionCallback(context)
+
+    //TODO: change the failureListener to proper handling
+    fun startAdvertising() {
+        val advertisingOptions: AdvertisingOptions = AdvertisingOptions
+            .Builder()
+            .setStrategy(strategy)
+            .build()
+
+        Nearby.getConnectionsClient(context)
+            .startAdvertising(
+                // TODO: make this some kind of username?
+                "local name",
+                serviceId,
+                sendConnectionCallback,
+                advertisingOptions
+            ).addOnFailureListener {
+                Log.d("mio", "fallimento advertising: ${it.message}")
+            }
+    }
+    //TODO: change the failureListener to proper handling
+    fun startDiscovery() {
+        val discoveryOptions: DiscoveryOptions = DiscoveryOptions
+            .Builder()
+            .setStrategy(strategy)
+            .build()
+
+        Nearby.getConnectionsClient(context)
+            .startDiscovery(
+                serviceId,
+                discoveryCallback,
+                discoveryOptions
+            ).addOnFailureListener {
+                Log.d("mio", "fallimento discovery")
+            }
+    }
+    fun stopAdvertising() {
+        Nearby.getConnectionsClient(context)
+            .stopAdvertising()
+    }
+    fun stopDiscovery() {
+        Nearby.getConnectionsClient(context)
+            .stopDiscovery()
+    }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            enableProximityShare = SettingsUtils.getStoredSettings().enableProximityShare
+        }
+//        notifyUser("ENDPOINTID")
+    }
+    LaunchedEffect(enableProximityShare) {
+        withContext(Dispatchers.IO) {
+            SettingsUtils.updateSingleSetting(SettingsNames.ENABLE_PROXIMITY_SHARE, enableProximityShare.toString())
+            // sharing was just enabled
+            if (enableProximityShare) {
+                startAdvertising()
+                startDiscovery()
+            }
+            // otherwise sharing was just disabled
+            else {
+                stopAdvertising()
+                stopDiscovery()
+            }
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -100,12 +220,18 @@ fun ExportScreen(
         }
         OutlinedButton(
             onClick = {
-                //TODO
+                enableProximityShare = !enableProximityShare
             },
             modifier = spacing
         ) {
+            Icon(
+                imageVector = if (enableProximityShare) Icons.Default.Check
+                    else Icons.Filled.Clear,
+                contentDescription = "Control proximity share functionality"
+            )
             Text(text = context.getString(
-                R.string.exportscreen_proximity_enabled
+                if (enableProximityShare) R.string.exportscreen_proximity_enabled
+                else R.string.exportscreen_proximity_disabled
             ))
         }
     }

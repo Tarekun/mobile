@@ -28,6 +28,7 @@ import androidx.core.app.ActivityCompat
 import com.example.mobile.composables.Content
 import com.example.mobile.composables.MonitorInfobox
 import com.example.mobile.database.DbManager
+import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.MonitorSettings
 import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
@@ -59,6 +60,8 @@ fun MonitoringScreen(
     var showMap: Boolean by remember { mutableStateOf(false) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
     var initializing by remember { mutableStateOf(true) }
+    var measurementsNumber: Int by remember { mutableStateOf(0) }
+    var externalMeasurementsNumber: Int by remember { mutableStateOf(0) }
 
     LaunchedEffect(monitor.variant) {
         withContext(Dispatchers.IO) {
@@ -67,26 +70,20 @@ fun MonitoringScreen(
                 MonitorVariant.WIFI -> SettingsUtils.getStoredSettings().wifi
                 MonitorVariant.LTE -> SettingsUtils.getStoredSettings().lte
             }
+
+            measurementsNumber = MeasurementsUtils.countLocalMeasurements(monitor.variant)
+            externalMeasurementsNumber = MeasurementsUtils.countExternalMeasurements(monitor.variant)
             initializing = false
         }
     }
 
     fun startRoutine() {
-        // aggiunto così l'ide non si lamenta della chiamata a `readValue` nella coroutine
-//        if (ActivityCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.RECORD_AUDIO
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            return
-//        }
-
         value = 0.0
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    //TODO: increase number of measurements taken
                     value = monitor.readValue()
+                    measurementsNumber++
                     delay(monitorSettings!!.monitorPeriod)
                 }
             }
@@ -140,7 +137,9 @@ fun MonitoringScreen(
                 variant = monitor.variant,
                 monitorStatus = monitor.currentStatus,
                 monitorSettings = it,
-                value = value
+                currentValue = value,
+                measurementsNumber = measurementsNumber,
+                externalMeasurementsNumber = externalMeasurementsNumber,
             )
         }
         Row() {

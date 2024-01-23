@@ -1,16 +1,22 @@
 package com.example.mobile.database
 
+import android.net.Uri
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import com.example.mobile.monitors.MonitorVariant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.InputStream
 
 @Entity(tableName = "measurement")
 @Serializable
@@ -21,7 +27,10 @@ data class Measurement(
     val signalStrength: Double,
     val classification: Classification,
     val monitor: MonitorVariant,
-    val timestamp: Instant
+    val timestamp: Instant,
+
+//    val latitude: Double,
+//    val longitude: Double,
 )
 
 @Dao
@@ -33,7 +42,10 @@ interface MeasurementDao {
     fun getAllMeasurements(): List<Measurement>
 
     @Query("SELECT * FROM measurement WHERE monitor = :monitor")
-    fun getAllMeasurementsPerMonitor(monitor: String): List<Measurement>
+    fun getAllMeasurementsPerMonitor(monitor: MonitorVariant): List<Measurement>
+
+    @Query("SELECT COUNT(*) FROM measurement WHERE monitor = :monitor")
+    fun countMeasurementsPerMonitor(monitor: MonitorVariant): Int
 }
 
 @Entity(tableName = "external_measurement")
@@ -53,11 +65,14 @@ interface ExternalMeasurementDao {
     @Insert
     fun insertMany(measurements: List<ExternalMeasurement>)
 
-    @Query("SELECT * FROM measurement")
+    @Query("SELECT * FROM external_measurement")
     fun getAllExternalMeasurements(): List<ExternalMeasurement>
 
-    @Query("SELECT * FROM measurement WHERE monitor = :monitor")
-    fun getAllExternalMeasurementsPerMonitor(monitor: String): List<ExternalMeasurement>
+    @Query("SELECT * FROM external_measurement WHERE monitor = :monitor")
+    fun getAllExternalMeasurementsPerMonitor(monitor: MonitorVariant): List<ExternalMeasurement>
+
+    @Query("SELECT COUNT(*) FROM external_measurement WHERE monitor = :monitor")
+    fun countExternalMeasurementsPerMonitor(monitor: MonitorVariant): Int
 }
 
 enum class Classification(val intValue: Int) {
@@ -91,5 +106,29 @@ object MeasurementsUtils {
     fun getJsonLocalCollection(variant: MonitorVariant): String {
         val measurements: List<Measurement> = DbManager.findAllMeasurementsPerVariant(variant)
         return Json.encodeToString(measurements)
+    }
+
+    fun getJsonFullLocalCollection(): String {
+        val measurements: MutableList<Measurement> =
+            DbManager.findAllMeasurementsPerVariant(MonitorVariant.AUDIO).toMutableList()
+
+        measurements += DbManager.findAllMeasurementsPerVariant(MonitorVariant.WIFI)
+        measurements += DbManager.findAllMeasurementsPerVariant(MonitorVariant.LTE)
+        return Json.encodeToString(measurements)
+    }
+
+    fun storeJsonDumpUri(dumpStream: InputStream?) {
+        dumpStream?.use {
+            val content = it.bufferedReader().use { reader -> reader.readText() }
+            storeExternalDump(content)
+        }
+    }
+
+    fun countLocalMeasurements(variant: MonitorVariant): Int {
+        return DbManager.countMeasurement(variant)
+    }
+
+    fun countExternalMeasurements(variant: MonitorVariant): Int {
+        return DbManager.countExternalMeasurement(variant)
     }
 }
