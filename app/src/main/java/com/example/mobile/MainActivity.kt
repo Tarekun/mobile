@@ -24,8 +24,8 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
-import com.example.mobile.notification.LocationManager
-import com.example.mobile.notification.NotificationHelper
+import com.example.mobile.commons.LocationManager
+import com.example.mobile.commons.NotificationHelper
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.NavigationHistory

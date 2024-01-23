@@ -140,4 +140,12 @@ object DbManager {
     fun updateSingleSetting(setting: Settings) {
         settingsDao.insertOrUpdateSetting(setting)
     }
+
+    fun getAllMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun getAllExternalMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
+        return externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
+    }
 }

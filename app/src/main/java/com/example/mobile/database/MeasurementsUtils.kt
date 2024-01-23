@@ -39,6 +39,9 @@ interface MeasurementDao {
     @Query("SELECT * FROM measurement WHERE monitor = :monitor")
     fun getAllMeasurementsPerMonitor(monitor: MonitorVariant): List<Measurement>
 
+    @Query("SELECT * FROM measurement WHERE monitor = :monitor LIMIT :maxNumber")
+    fun getAllMeasurementsPerMonitor(monitor: MonitorVariant, maxNumber: Int): List<Measurement>
+
     @Query("SELECT COUNT(*) FROM measurement WHERE monitor = :monitor")
     fun countMeasurementsPerMonitor(monitor: MonitorVariant): Int
 }
@@ -52,7 +55,9 @@ data class ExternalMeasurement(
     val signalStrength: Double,
     val classification: Classification,
     val monitor: MonitorVariant,
-    val timestamp: Instant
+    val timestamp: Instant,
+    val latitude: Double,
+    val longitude: Double,
 )
 
 @Dao
@@ -65,6 +70,9 @@ interface ExternalMeasurementDao {
 
     @Query("SELECT * FROM external_measurement WHERE monitor = :monitor")
     fun getAllExternalMeasurementsPerMonitor(monitor: MonitorVariant): List<ExternalMeasurement>
+
+    @Query("SELECT * FROM external_measurement WHERE monitor = :monitor LIMIT :maxNumber")
+    fun getAllExternalMeasurementsPerMonitor(monitor: MonitorVariant, maxNumber: Int): List<ExternalMeasurement>
 
     @Query("SELECT COUNT(*) FROM external_measurement WHERE monitor = :monitor")
     fun countExternalMeasurementsPerMonitor(monitor: MonitorVariant): Int
@@ -103,18 +111,6 @@ object MeasurementsUtils {
         DbManager.storeMeasurement(measurement)
     }
 
-//    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
-//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
-//    }
-//
-//    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
-//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.WIFI)
-//    }
-//
-//    fun storeLteMeasurement(decibels: Double, classification: Classification) {
-//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.LTE)
-//    }
-
     fun storeExternalDump(jsonString: String) {
         val measurements: List<ExternalMeasurement> = Json.decodeFromString(jsonString)
         DbManager.storeManyExternalMeasurement(measurements)
@@ -148,5 +144,13 @@ object MeasurementsUtils {
 
     fun countExternalMeasurements(variant: MonitorVariant): Int {
         return DbManager.countExternalMeasurement(variant)
+    }
+
+    fun getLocalMeasurements(variant: MonitorVariant, maxNumber: Int): List<Measurement> {
+        return DbManager.getAllMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun getAllExternalMeasurements(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
+        return DbManager.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
     }
 }

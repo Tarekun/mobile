@@ -34,7 +34,7 @@ import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
-import com.example.mobile.notification.LocationManager
+import com.example.mobile.commons.LocationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -77,6 +77,7 @@ fun MonitoringScreen(
         }
     }
 
+
     @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
     fun startMonitoring() {
         LocationManager.startLocationRecording()
@@ -92,25 +93,41 @@ fun MonitoringScreen(
         }
     }
 
-    val permissionRequestLauncher = rememberLauncherForActivityResult(
+    fun stopMonitoring() {
+        monitoringJob?.cancel()
+        monitor.stopMonitoring()
+        value = 0.0
+        LocationManager.stopLocationRecording()
+    }
+
+
+    fun showDeniedPermissionDialog() {
+        val dialog = AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.permission_failed_dialog_title))
+            .setMessage(context.getString(R.string.permission_failed_dialog_content))
+            .setNegativeButton(
+                context.getString(R.string.cancel_button_text)
+            ) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        dialog.show()
+    }
+    val requestPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            startMonitoring()
+        if (!isGranted) {
+            showDeniedPermissionDialog()
         }
-        else {
-            val dialog = AlertDialog.Builder(context)
-                .setTitle(context.getString(R.string.permission_failed_dialog_title))
-                .setMessage(context.getString(R.string.permission_failed_dialog_content))
-                .setNegativeButton(
-                    context.getString(R.string.cancel_button_text)
-                ) { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-
-            dialog.show()
+    }
+    val requestPermissionAndStart = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            showDeniedPermissionDialog()
         }
+        else startMonitoring()
     }
 
     fun checkPermissionsAndStartMonitoring() {
@@ -120,7 +137,9 @@ fun MonitoringScreen(
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            permissionRequestLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            // this shouldn't start monitoring because we haven't checked for monitor specific
+            // permissions yet
+            requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         // then we check for monitor specific permissions
         else if (ActivityCompat.checkSelfPermission(
@@ -128,18 +147,11 @@ fun MonitoringScreen(
                 permissionForMonitor(monitor.variant)
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            permissionRequestLauncher.launch(permissionForMonitor(monitor.variant))
+            requestPermissionAndStart.launch(permissionForMonitor(monitor.variant))
         }
         else {
             startMonitoring()
         }
-    }
-
-    fun stopMonitoring() {
-        monitoringJob?.cancel()
-        monitor.stopMonitoring()
-        value = 0.0
-        LocationManager.stopLocationRecording()
     }
 
 
