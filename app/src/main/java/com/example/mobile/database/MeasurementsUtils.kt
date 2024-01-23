@@ -1,16 +1,12 @@
 package com.example.mobile.database
 
-import android.net.Uri
-import android.util.Log
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import com.example.mobile.monitors.MonitorVariant
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -28,9 +24,8 @@ data class Measurement(
     val classification: Classification,
     val monitor: MonitorVariant,
     val timestamp: Instant,
-
-//    val latitude: Double,
-//    val longitude: Double,
+    val latitude: Double,
+    val longitude: Double,
 )
 
 @Dao
@@ -85,17 +80,40 @@ enum class Classification(val intValue: Int) {
 }
 
 object MeasurementsUtils {
-    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
-        DbManager.storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
+    fun makeMeasurement(
+        signalStrength: Double,
+        classification: Classification,
+        variant: MonitorVariant,
+        latitude: Double,
+        longitude: Double,
+    ): Measurement {
+
+        return Measurement(
+            0,
+            signalStrength,
+            classification,
+            variant,
+            Clock.System.now(),
+            latitude,
+            longitude
+        )
     }
 
-    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
-        DbManager.storeMeasurement(decibels, classification, MonitorVariant.WIFI)
+    fun storeMeasurement(measurement: Measurement) {
+        DbManager.storeMeasurement(measurement)
     }
 
-    fun storeLteMeasurement(decibels: Double, classification: Classification) {
-        DbManager.storeMeasurement(decibels, classification, MonitorVariant.LTE)
-    }
+//    fun storeAudioMeasurement(decibels: Double, classification: Classification) {
+//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.AUDIO)
+//    }
+//
+//    fun storeWifiMeasurement(decibels: Double, classification: Classification) {
+//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.WIFI)
+//    }
+//
+//    fun storeLteMeasurement(decibels: Double, classification: Classification) {
+//        DbManager.storeMeasurement(decibels, classification, MonitorVariant.LTE)
+//    }
 
     fun storeExternalDump(jsonString: String) {
         val measurements: List<ExternalMeasurement> = Json.decodeFromString(jsonString)

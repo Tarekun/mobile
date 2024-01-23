@@ -5,7 +5,9 @@ import android.net.wifi.ScanResult
 import android.util.Log
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
+import com.example.mobile.database.Measurement
 import com.example.mobile.database.MeasurementsUtils
+import com.example.mobile.notification.LocationManager
 import java.lang.IllegalStateException
 
 enum class MonitorVariant {
@@ -23,7 +25,7 @@ interface IMonitor {
     fun startMonitoring(onStart: () -> Unit)
     fun stopMonitoring()
     fun reset()
-    fun readValue(): Double
+    fun makeMeasurement(): Measurement
     fun classifySignalStrength(dB: Double): Classification
 }
 
@@ -95,22 +97,22 @@ abstract class Monitor(
         )
     }
 
-    override fun readValue(): Double {
+    override fun makeMeasurement(): Measurement {
         return checkStateOrFail(
             MonitorState.STARTED,
             {
                 val value = doReadValue()
                 val classification = classifySignalStrength(value)
-                when (variant) {
-                    MonitorVariant.AUDIO ->
-                        MeasurementsUtils.storeAudioMeasurement(value, classification)
-                    MonitorVariant.WIFI ->
-                        MeasurementsUtils.storeWifiMeasurement(value, classification)
-                    MonitorVariant.LTE ->
-                        MeasurementsUtils.storeLteMeasurement(value, classification)
+                val measurement = MeasurementsUtils.makeMeasurement(
+                    value,
+                    classification,
+                    variant,
+                    LocationManager.latitude,
+                    LocationManager.longitude,
+                )
+                MeasurementsUtils.storeMeasurement(measurement)
 
-                }
-                value
+                measurement
             }
         )
     }

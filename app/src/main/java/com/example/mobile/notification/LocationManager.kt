@@ -10,6 +10,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import java.util.concurrent.CountDownLatch
 
 object LocationManager {
     private val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000 * 60)
@@ -19,6 +20,7 @@ object LocationManager {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+    //TODO: find sync system so that these values can't be read before they are properly initializeds
     private var _latitude: Double = 0.0
     private var _longitude: Double = 0.0
     val latitude: Double
@@ -31,8 +33,9 @@ object LocationManager {
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                if (locationResult.locations.isNotEmpty()) {
+                super.onLocationResult(locationResult)
 
+                if (locationResult.locations.isNotEmpty()) {
                     var bestLocation = locationResult.locations[0]
                     for (location in locationResult.locations) {
                         if (location.accuracy > bestLocation.accuracy) {

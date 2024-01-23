@@ -35,6 +35,7 @@ import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
+import com.example.mobile.notification.LocationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -79,10 +80,11 @@ fun MonitoringScreen(
 
     fun startRoutine() {
         value = 0.0
+        LocationManager.startLocationRecording()
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = monitor.readValue()
+                    value = monitor.makeMeasurement().signalStrength
                     measurementsNumber++
                     delay(monitorSettings!!.monitorPeriod)
                 }
@@ -123,6 +125,7 @@ fun MonitoringScreen(
         monitoringJob?.cancel()
         monitor.stopMonitoring()
         value = 0.0
+        LocationManager.stopLocationRecording()
     }
 
     if (initializing)

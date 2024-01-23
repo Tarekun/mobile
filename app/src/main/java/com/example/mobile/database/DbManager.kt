@@ -100,20 +100,8 @@ object DbManager {
         settingsDao = db.settingsDao()
     }
 
-    fun storeMeasurement(
-        decibels: Double,
-        classification: Classification,
-        monitor: MonitorVariant
-    ) {
-        var measurement = Measurement(
-            0,
-            decibels,
-            classification,
-            monitor,
-            Clock.System.now()
-        )
-
-         measurementDao.insert(measurement)
+    fun storeMeasurement(measurement: Measurement) {
+        measurementDao.insert(measurement)
     }
 
     fun storeManyExternalMeasurement(measurements: List<ExternalMeasurement>) {
