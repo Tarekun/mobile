@@ -1,7 +1,5 @@
 package com.example.mobile
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,10 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.core.content.ContextCompat
 import com.example.mobile.composables.OptionSelect
 import com.example.mobile.database.DbManager
-import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
@@ -37,8 +33,6 @@ import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
-import java.io.File
-import kotlin.io.path.writeText
 
 
 class MainActivity : ComponentActivity() {

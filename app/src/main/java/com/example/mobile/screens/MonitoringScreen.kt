@@ -5,7 +5,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,12 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.example.mobile.composables.Content
 import com.example.mobile.composables.MonitorInfobox
-import com.example.mobile.database.DbManager
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.MonitorSettings
-import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
@@ -78,9 +75,10 @@ fun MonitoringScreen(
         }
     }
 
-    fun startRoutine() {
-        value = 0.0
+    @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
+    fun startMonitoring() {
         LocationManager.startLocationRecording()
+        value = 0.0
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
@@ -96,19 +94,24 @@ fun MonitoringScreen(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            startRoutine()
+            startMonitoring()
         }
         else {
             //TODO: explain that the permission is needed and maybe take to the settings
         }
     }
 
-    fun startMonitoring() {
-        //TODO: permission check should be
-        //check location enabled to localize every measurement
-        //check specific permission per monitor
-        //start monitoring
+    fun checkPermissionsAndStartMonitoring() {
+        // location is needed by every monitor to persist on db the coordinates of the measurement
         if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionRequestLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        // then we check for monitor specific permissions
+        else if (ActivityCompat.checkSelfPermission(
                 context,
                 permissionForMonitor(monitor.variant)
             ) != PackageManager.PERMISSION_GRANTED
@@ -116,9 +119,8 @@ fun MonitoringScreen(
             permissionRequestLauncher.launch(permissionForMonitor(monitor.variant))
         }
         else {
-            startRoutine()
+            startMonitoring()
         }
-
     }
 
     fun stopMonitoring() {
@@ -127,6 +129,8 @@ fun MonitoringScreen(
         value = 0.0
         LocationManager.stopLocationRecording()
     }
+
+
 
     if (initializing)
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -154,26 +158,16 @@ fun MonitoringScreen(
             Spacer(modifier = Modifier.width(16.dp))
             Button(onClick = {
                 when (monitor.currentStatus) {
-                    MonitorState.CREATED -> startMonitoring()
+                    MonitorState.CREATED -> checkPermissionsAndStartMonitoring()
                     MonitorState.STARTED -> stopMonitoring()
                     MonitorState.STOPPED -> {
                         monitor.reset()
-                        startMonitoring()
+                        checkPermissionsAndStartMonitoring()
                     }
                 }
             }) {
                 Text(text = "${if (monitor.currentStatus != MonitorState.STARTED) "Start" else "Stop"} monitoring")
             }
         }
-//        Content(
-//            currentVolume = value,
-//            start = {
-//                startMonitoring()
-//            },
-//            stop = {
-//                stopMonitoring()
-//            },
-//            onPeriodUpdate = { updateMonitoringPeriod(it) }
-//        )
     }
 }

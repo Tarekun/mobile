@@ -1,10 +1,7 @@
 package com.example.mobile.monitors
 
 import android.content.Context
-import android.net.wifi.ScanResult
-import android.util.Log
 import com.example.mobile.database.Classification
-import com.example.mobile.database.DbManager
 import com.example.mobile.database.Measurement
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.notification.LocationManager
