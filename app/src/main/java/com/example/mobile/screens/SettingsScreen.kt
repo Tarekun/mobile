@@ -213,7 +213,7 @@ fun SettingsScreen(
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            settings = SettingsUtils.getStoredSettings()
+            settings = SettingsUtils.storedSettings
             setMonitorSettings()
             initializing = false
         }

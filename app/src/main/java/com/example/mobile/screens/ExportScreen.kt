@@ -162,7 +162,7 @@ fun ExportScreen(
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            enableProximityShare = SettingsUtils.getStoredSettings().enableProximityShare
+            enableProximityShare = SettingsUtils.storedSettings.enableProximityShare
         }
 //        notifyUser("ENDPOINTID")
     }

@@ -66,9 +66,9 @@ fun MonitoringScreen(
     LaunchedEffect(monitor.variant) {
         withContext(Dispatchers.IO) {
             monitorSettings = when(monitor.variant) {
-                MonitorVariant.AUDIO -> SettingsUtils.getStoredSettings().audio
-                MonitorVariant.WIFI -> SettingsUtils.getStoredSettings().wifi
-                MonitorVariant.LTE -> SettingsUtils.getStoredSettings().lte
+                MonitorVariant.AUDIO -> SettingsUtils.storedSettings.audio
+                MonitorVariant.WIFI -> SettingsUtils.storedSettings.wifi
+                MonitorVariant.LTE -> SettingsUtils.storedSettings.lte
             }
 
             measurementsNumber = MeasurementsUtils.countLocalMeasurements(monitor.variant)
