@@ -47,6 +47,8 @@ fun permissionForMonitor(variant: MonitorVariant): String {
         MonitorVariant.AUDIO -> Manifest.permission.RECORD_AUDIO
         MonitorVariant.WIFI -> Manifest.permission.ACCESS_FINE_LOCATION
         MonitorVariant.LTE -> Manifest.permission.READ_PHONE_STATE
+        //TODO: remove when this variant is removed
+        MonitorVariant.MAP -> ""
     }
 }
 
@@ -69,6 +71,8 @@ fun MonitoringScreen(
                 MonitorVariant.AUDIO -> SettingsUtils.getStoredSettings().audio
                 MonitorVariant.WIFI -> SettingsUtils.getStoredSettings().wifi
                 MonitorVariant.LTE -> SettingsUtils.getStoredSettings().lte
+                //TODO: remove
+                MonitorVariant.MAP -> SettingsUtils.getStoredSettings().lte
             }
 
             measurementsNumber = MeasurementsUtils.countLocalMeasurements(monitor.variant)

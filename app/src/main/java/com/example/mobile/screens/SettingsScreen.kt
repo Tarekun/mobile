@@ -208,6 +208,8 @@ fun SettingsScreen(
             MonitorVariant.AUDIO -> settings!!.audio
             MonitorVariant.WIFI -> settings!!.wifi
             MonitorVariant.LTE -> settings!!.lte
+            //TODO: remove
+            MonitorVariant.MAP -> settings!!.lte
         }
     }
 
@@ -262,6 +264,13 @@ fun SettingsScreen(
                             settings!!.lte.measurementNumber,
                         )
                     )
+                    //TODO: remove
+                    MonitorVariant.MAP -> settings = settings!!.copy(
+                        lte = MonitorSettings(
+                            it,
+                            settings!!.lte.measurementNumber,
+                        )
+                    )
                 }
             },
             min = 1
@@ -285,6 +294,13 @@ fun SettingsScreen(
                         )
                     )
                     MonitorVariant.LTE -> settings = settings!!.copy(
+                        lte = MonitorSettings(
+                            settings!!.lte.monitorPeriod,
+                            it.toInt()
+                        )
+                    )
+                    //TODO: remove
+                    MonitorVariant.MAP -> settings = settings!!.copy(
                         lte = MonitorSettings(
                             settings!!.lte.monitorPeriod,
                             it.toInt()

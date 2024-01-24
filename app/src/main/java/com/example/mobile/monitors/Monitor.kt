@@ -10,7 +10,8 @@ import java.lang.IllegalStateException
 enum class MonitorVariant {
     AUDIO,
     WIFI,
-    LTE
+    LTE,
+    MAP
 }
 
 enum class MonitorState {
