@@ -86,66 +86,22 @@ abstract class AppDatabase : RoomDatabase() {
 
 object DbManager {
     private lateinit var db: AppDatabase
-    private lateinit var measurementDao: MeasurementDao
-    private lateinit var externalMeasurementDao: ExternalMeasurementDao
-    private lateinit var settingsDao: SettingsDao
+    private lateinit var _measurementDao: MeasurementDao
+    private lateinit var _externalMeasurementDao: ExternalMeasurementDao
+    private lateinit var _settingsDao: SettingsDao
+
+    public val measurementDao
+        get() = _measurementDao
+    public val externalMeasurementDao
+        get() = _externalMeasurementDao
+    public val settingsDao
+        get() = _settingsDao
 
     fun init(applicationContext: Context) {
         db = AppDatabase.getDatabase(applicationContext)
-        measurementDao = db.measurementDao()
-        externalMeasurementDao = db.externalMeasurementDao()
-        settingsDao = db.settingsDao()
+        _measurementDao = db.measurementDao()
+        _externalMeasurementDao = db.externalMeasurementDao()
+        _settingsDao = db.settingsDao()
     }
 
-    fun storeMeasurement(measurement: Measurement) {
-        measurementDao.insert(measurement)
-    }
-
-    fun storeManyExternalMeasurement(measurements: List<ExternalMeasurement>) {
-        externalMeasurementDao.insertMany(measurements)
-    }
-
-    fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
-        return measurementDao.getAllMeasurementsPerMonitor(variant)
-    }
-
-    fun countMeasurement(variant: MonitorVariant): Int {
-        return measurementDao.countMeasurementsPerMonitor(variant)
-    }
-
-    fun countExternalMeasurement(variant: MonitorVariant): Int {
-        return externalMeasurementDao.countExternalMeasurementsPerMonitor(variant)
-    }
-
-    fun getAllMeasurements(): List<Measurement> {
-        return measurementDao.getAllMeasurements()
-    }
-
-    fun getAllExternalMeasurements(): List<ExternalMeasurement> {
-        return externalMeasurementDao.getAllExternalMeasurements()
-    }
-
-    fun findSettingByName(name: String): Settings? {
-        return settingsDao.findByName(name)
-    }
-
-    fun findAllSettings(): List<Settings> {
-        return settingsDao.getAllSettings()
-    }
-
-    fun updateAllSettings(settings: List<Settings>) {
-        settingsDao.insertOrUpdateAllSettings(settings)
-    }
-
-    fun updateSingleSetting(setting: Settings) {
-        settingsDao.insertOrUpdateSetting(setting)
-    }
-
-    fun getAllMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<Measurement> {
-        return measurementDao.getAllMeasurementsPerMonitor(variant, maxNumber)
-    }
-
-    fun getAllExternalMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
-        return externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
-    }
 }

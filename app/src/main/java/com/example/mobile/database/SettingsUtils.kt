@@ -91,8 +91,15 @@ object SettingsUtils {
         )
     }
 
+
+
+    // avoids name clash at compile time between this and the getter function
+    @get:JvmName("storedSettings")
+    public val storedSettings: SettingsTable
+        get() = getStoredSettings()
+
     fun getStoredSettings(): SettingsTable {
-        val settings = checkFullSettingsList(DbManager.findAllSettings())
+        val settings = checkFullSettingsList(DbManager.settingsDao.getAllSettings())
         return makeSettingsTable(settings)
     }
 
@@ -103,7 +110,7 @@ object SettingsUtils {
             // settings are partial, a development issue => settings are restored to default
             if (settingName.name !in storedSettingsNames) {
                 updateSettings(SettingsTable())
-                return DbManager.findAllSettings()
+                return DbManager.settingsDao.getAllSettings()
             }
         }
 
@@ -111,10 +118,10 @@ object SettingsUtils {
     }
 
     fun updateSettings(settings: SettingsTable) {
-        DbManager.updateAllSettings(makeSettingsList(settings))
+        DbManager.settingsDao.insertOrUpdateAllSettings(makeSettingsList(settings))
     }
 
     fun updateSingleSetting(setting: SettingsNames, value: String) {
-        DbManager.updateSingleSetting(Settings(setting.name, value))
+        DbManager.settingsDao.insertOrUpdateSetting(Settings(setting.name, value))
     }
 }

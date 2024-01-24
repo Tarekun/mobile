@@ -108,26 +108,23 @@ object MeasurementsUtils {
     }
 
     fun storeMeasurement(measurement: Measurement) {
-        DbManager.storeMeasurement(measurement)
+        DbManager.measurementDao.insert(measurement)
     }
 
     fun storeExternalDump(jsonString: String) {
         val measurements: List<ExternalMeasurement> = Json.decodeFromString(jsonString)
-        DbManager.storeManyExternalMeasurement(measurements)
+        DbManager.externalMeasurementDao.insertMany(measurements)
     }
 
 
     fun getJsonLocalCollection(variant: MonitorVariant): String {
-        val measurements: List<Measurement> = DbManager.findAllMeasurementsPerVariant(variant)
+        val measurements: List<Measurement> =
+            DbManager.measurementDao.getAllMeasurementsPerMonitor(variant)
         return Json.encodeToString(measurements)
     }
 
     fun getJsonFullLocalCollection(): String {
-        val measurements: MutableList<Measurement> =
-            DbManager.findAllMeasurementsPerVariant(MonitorVariant.AUDIO).toMutableList()
-
-        measurements += DbManager.findAllMeasurementsPerVariant(MonitorVariant.WIFI)
-        measurements += DbManager.findAllMeasurementsPerVariant(MonitorVariant.LTE)
+        val measurements = DbManager.measurementDao.getAllMeasurements()
         return Json.encodeToString(measurements)
     }
 
@@ -139,18 +136,22 @@ object MeasurementsUtils {
     }
 
     fun countLocalMeasurements(variant: MonitorVariant): Int {
-        return DbManager.countMeasurement(variant)
+        return DbManager.measurementDao.countMeasurementsPerMonitor(variant)
     }
 
     fun countExternalMeasurements(variant: MonitorVariant): Int {
-        return DbManager.countExternalMeasurement(variant)
+        return DbManager.externalMeasurementDao.countExternalMeasurementsPerMonitor(variant)
+    }
+
+    fun getLocalMeasurements(variant: MonitorVariant): List<Measurement> {
+        return DbManager.measurementDao.getAllMeasurementsPerMonitor(variant)
     }
 
     fun getLocalMeasurements(variant: MonitorVariant, maxNumber: Int): List<Measurement> {
-        return DbManager.getAllMeasurementsPerMonitor(variant, maxNumber)
+        return DbManager.measurementDao.getAllMeasurementsPerMonitor(variant, maxNumber)
     }
 
     fun getAllExternalMeasurements(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
-        return DbManager.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
+        return DbManager.externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
     }
 }
