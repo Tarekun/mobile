@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import com.example.mobile.monitors.IMonitor.MonitorVariant
 import java.util.Date
 
 enum class Classification(val intValue: Int) {
@@ -13,8 +14,10 @@ enum class Classification(val intValue: Int) {
     MEDIUM(2),
     LOW(1),
     MIN(0),
-    INVALID(-1)
+    INVALID(-1),
+    NO_DATA(-2) // Assegnato un valore negativo per indicare "NO_DATA"
 }
+
 
 @Entity(tableName = "measurement")
 data class Measurement(
@@ -37,4 +40,7 @@ interface MeasurementDao {
 
     @Query("SELECT * FROM measurement")
     fun getAllMeasurements(): List<Measurement>
+    @Query("SELECT signalStrength FROM measurement WHERE grid = :gridName AND monitor = :monitorType ORDER BY timestamp DESC LIMIT 5")
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>
+
 }

@@ -41,7 +41,7 @@ private class Converters {
     }
 }
 
-@Database(entities = [Measurement::class], version = 2, exportSchema = false)
+@Database(entities = [Measurement::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun measurementDao(): MeasurementDao
@@ -56,7 +56,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mydatabase.db"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
@@ -87,6 +89,7 @@ class DbManager(context: Context) {
             Date(System.currentTimeMillis())
         )
 
+
         runInCoroutine { measurementDao.insert(measurement) }
     }
 
@@ -111,5 +114,9 @@ class DbManager(context: Context) {
 
     fun getAllMeasurements(): List<Measurement> {
         return measurementDao.getAllMeasurements()
+    }
+
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>{
+        return measurementDao.lastSignalStrength(gridName,monitorType)
     }
 }
