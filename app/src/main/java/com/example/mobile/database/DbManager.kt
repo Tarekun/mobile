@@ -76,7 +76,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
@@ -147,5 +149,9 @@ object DbManager {
 
     fun getAllExternalMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
         return externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>{
+        return measurementDao.lastSignalStrength(gridName,monitorType)
     }
 }

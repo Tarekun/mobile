@@ -31,7 +31,7 @@ android {
         }
         buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"AIzaSyAJOjAfauHwGFulbJILXrv09ct3J6fd6jI\"")
 
-    }
+    } 
 
     buildTypes {
         release {

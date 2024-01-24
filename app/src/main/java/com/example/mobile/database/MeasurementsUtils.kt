@@ -44,6 +44,9 @@ interface MeasurementDao {
 
     @Query("SELECT COUNT(*) FROM measurement WHERE monitor = :monitor")
     fun countMeasurementsPerMonitor(monitor: MonitorVariant): Int
+
+    @Query("SELECT signalStrength FROM measurement WHERE grid = :gridName AND monitor = :monitorType ORDER BY timestamp DESC LIMIT 5")
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>
 }
 
 @Entity(tableName = "external_measurement")
@@ -84,7 +87,8 @@ enum class Classification(val intValue: Int) {
     MEDIUM(2),
     LOW(1),
     MIN(0),
-    INVALID(-1)
+    INVALID(-1),
+    NO_DATA(-2) // Assegnato un valore negativo per indicare "NO_DATA"
 }
 
 object MeasurementsUtils {
