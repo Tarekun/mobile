@@ -164,6 +164,8 @@ class MainActivity : ComponentActivity() {
                                         MonitorVariant.AUDIO -> audioMonitor
                                         MonitorVariant.WIFI -> wifiMonitor
                                         MonitorVariant.LTE -> lteMonitor
+                                        //TODO: remove this as the map shouldn't be a monitor at all
+                                        MonitorVariant.MAP -> lteMonitor
                                     }
                                 )
                             Screens.SETTINGS ->

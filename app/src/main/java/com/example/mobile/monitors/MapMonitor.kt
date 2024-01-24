@@ -25,7 +25,7 @@ import kotlin.math.cos
 
 class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
 
-    private val dbManager = DbManager(context)
+//    private val dbManager = DbManager(context)
     val cellPolygons = mutableMapOf<String, Polygon>()
 
 
@@ -102,7 +102,7 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
                 val polygon = map.addPolygon(polygonOptions)
                 cellPolygons[cellName] = polygon // Memorizza il riferimento al poligono
             }
-            colorCurrentGrid(IMonitor.MonitorVariant.AUDIO, currentGridCell)
+            colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell)
 
         } catch (e: Exception) {
             Log.e("MapUtils", "Error adding grid to map", e)
@@ -192,11 +192,11 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         CurrentState.currentLocation = location
     }
 
-    fun colorCurrentGrid(monitorType: IMonitor.MonitorVariant, currentGrid: String?) {
+    fun colorCurrentGrid(monitorType: MonitorVariant, currentGrid: String?) {
         Log.d("MapUtils", "inside colorCurrentGrid" )
         coroutineScope.launch {
             val lastSignalStrengthList = withContext(Dispatchers.IO) {
-                dbManager.lastSignalStrength(currentGrid, monitorType)
+                DbManager.lastSignalStrength(currentGrid, monitorType)
             }
             val averageSignalStrength = calculateAverage(lastSignalStrengthList)
             val classification = classifySignalStrength((averageSignalStrength))
@@ -242,11 +242,11 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         }
 
         return when (dB) {
-            in 0.0..-3.0 -> Classification.MAX
-            in -3.0..-24.0 -> Classification.HIGH
-            in -24.0..-40.0 -> Classification.MEDIUM
-            in -40.0..-60.0 -> Classification.LOW
-            in -60.0..Double.NEGATIVE_INFINITY -> Classification.MIN
+            in -3.0..0.0 -> Classification.MAX
+            in -24.0..-3.0 -> Classification.HIGH
+            in -40.0..-24.0 -> Classification.MEDIUM
+            in -60.0..-40.0 -> Classification.LOW
+            in Double.NEGATIVE_INFINITY..-60.0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }

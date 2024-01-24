@@ -26,6 +26,7 @@ data class Measurement(
     val timestamp: Instant,
     val latitude: Double,
     val longitude: Double,
+    val grid : String? = null,
 )
 
 @Dao
