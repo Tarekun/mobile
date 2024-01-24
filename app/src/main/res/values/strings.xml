@@ -22,6 +22,14 @@
     <string name="exportscreen_proximity_enabled">Disable proximity share</string>
     <string name="notification_title_endpoint_found">Connect to share data</string>
     <string name="notification_content_endpoint_found">A device you can share your measurements with was found with endpoint id:</string>
-
+    <string name="permission_failed_dialog_title">Permission denied</string>
+    <string name="cancel_button_text">Cancel</string>
+    <string name="permission_failed_dialog_content">
+        The monitor can\'t work without the permission. Every monitor needs access to fine location to
+        know where the measurements are performed. Additionally, specific monitors may require more
+        permissions, such as:
+        \n- The audio monitor needs access to your phone\'s microphone to compute the noise
+        \n- The LTE monitor needs access to your mobile phone network to test the connectivity of the SIM
+    </string>
 
 </resources>
