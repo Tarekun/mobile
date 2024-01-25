@@ -61,4 +61,6 @@ object LocationManager {
     fun stopLocationRecording() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+
+
 }

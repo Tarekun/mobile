@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // checks if the app was opened by a proximity share notification
         val endpointId = intent.getStringExtra(NotificationHelper.extraEndpointId) ?: ""
         if (endpointId != "") {
             navigateTo(Screens.PROXIMITY_SHARE)

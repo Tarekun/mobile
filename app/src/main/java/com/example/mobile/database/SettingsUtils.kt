@@ -1,5 +1,6 @@
 package com.example.mobile.database
 
+import android.text.BoringLayout
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
@@ -51,6 +52,7 @@ data class SettingsTable(
     val lte: MonitorSettings = MonitorSettings(1000 * 60, 10),
     val gridUnitLength: Int = 10,
     val enableProximityShare: Boolean = false,
+    val notifyInNewArea: Boolean = false,
 )
 
 object SettingsUtils {

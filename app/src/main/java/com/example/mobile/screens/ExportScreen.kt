@@ -32,6 +32,7 @@ import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.commons.NotificationHelper
+import com.example.mobile.composables.SwitchSetting
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
@@ -203,22 +204,17 @@ fun ExportScreen(
         ) {
             Text(text = context.getString(R.string.exportscreen_export_button))
         }
-        OutlinedButton(
+        SwitchSetting(
+            label = context.getString(
+                if (enableProximityShare) R.string.exportscreen_proximity_enabled
+                else R.string.exportscreen_proximity_disabled
+            ),
             onClick = {
                 enableProximityShare = !enableProximityShare
             },
-            modifier = spacing
-        ) {
-            Icon(
-                imageVector = if (enableProximityShare) Icons.Default.Check
-                    else Icons.Filled.Clear,
-                contentDescription = "Control proximity share functionality"
-            )
-            Text(text = context.getString(
-                if (enableProximityShare) R.string.exportscreen_proximity_enabled
-                else R.string.exportscreen_proximity_disabled
-            ))
-        }
+            value = enableProximityShare,
+            modifier = spacing,
+        )
     }
 
 }
