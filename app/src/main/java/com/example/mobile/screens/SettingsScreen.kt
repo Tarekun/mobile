@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.mobile.R
+import com.example.mobile.commons.LocationManager
 import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
 import com.example.mobile.composables.NumberSetting
@@ -26,6 +27,7 @@ import com.example.mobile.composables.OptionsSetting
 import com.example.mobile.composables.SettingLayout
 import com.example.mobile.composables.SwitchSetting
 import com.example.mobile.database.MonitorSettings
+import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
@@ -37,6 +39,8 @@ import kotlinx.coroutines.withContext
 fun SettingsScreen(
     variant: MonitorVariant,
     navigateTo: (targetScreen: Screens) -> Unit,
+    startNotifyingInNewArea: () -> Unit,
+    stopNotifying: () -> Unit,
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -56,12 +60,12 @@ fun SettingsScreen(
         }
     }
 
-    fun startNotifyingInNewArea() {
-
-    }
-    fun stopNotifying() {
-
-    }
+//    fun startNotifyingInNewArea() {
+//        LocationManager.startNotifyingInNewArea()
+//    }
+//    fun stopNotifying() {
+//        LocationManager.stopNotifying()
+//    }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -81,12 +85,26 @@ fun SettingsScreen(
     LaunchedEffect(variant) {
         if(!initializing) setMonitorSettings()
     }
+
+    var skipFirst by remember { mutableStateOf(true) }
     LaunchedEffect(notifyInNewArea) {
         if (notifyInNewArea) {
             startNotifyingInNewArea()
         }
         else {
             stopNotifying()
+        }
+        // on the first render we shouldn't override the setting with false
+        if (skipFirst) {
+            skipFirst = false
+        }
+        else {
+            withContext(Dispatchers.IO) {
+                SettingsUtils.updateSingleSetting(
+                    SettingsNames.NOTIFY_IN_NEW_AREA,
+                    notifyInNewArea.toString()
+                )
+            }
         }
     }
 

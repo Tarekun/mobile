@@ -1,6 +1,7 @@
 package com.example.mobile
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.example.mobile.composables.OptionSelect
 import com.example.mobile.database.DbManager
 import com.example.mobile.monitors.AudioMonitor
@@ -25,6 +30,7 @@ import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.commons.LocationManager
+import com.example.mobile.commons.NewAreaWorker
 import com.example.mobile.commons.NotificationHelper
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
@@ -33,6 +39,7 @@ import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : ComponentActivity() {
@@ -45,11 +52,29 @@ class MainActivity : ComponentActivity() {
     private val lteMonitor by lazy {
         LteMonitor(applicationContext)
     }
+    private lateinit var newAreaWorker: PeriodicWorkRequest
+//    private lateinit var newAreaWorker: OneTimeWorkRequest
 
     private fun initializeSingletons() {
         DbManager.init(applicationContext)
         NotificationHelper.init(applicationContext)
         LocationManager.init(this)
+
+        newAreaWorker = PeriodicWorkRequest.Builder(
+            NewAreaWorker::class.java,
+            30,
+            TimeUnit.MINUTES
+        ).build()
+//        newAreaWorker = OneTimeWorkRequestBuilder<NewAreaWorker>()
+//            .setInitialDelay(5, TimeUnit.SECONDS) // Set a short delay for testing
+//            .build()
+    }
+
+    private fun startNotifyingInNewArea() {
+        WorkManager.getInstance(this).enqueue(newAreaWorker)
+    }
+    private fun stopNotifying() {
+        WorkManager.getInstance(this).cancelWorkById(newAreaWorker.id)
     }
 
     // TopAppBar è ancora in modalità experimental
@@ -140,7 +165,9 @@ class MainActivity : ComponentActivity() {
                             Screens.SETTINGS ->
                                 SettingsScreen(
                                     variant = inUseMonitor,
-                                    navigateTo = { navigateTo(it) }
+                                    navigateTo = { navigateTo(it) },
+                                    startNotifyingInNewArea = {startNotifyingInNewArea()},
+                                    stopNotifying = {stopNotifying()}
                                 )
                             Screens.EXPORT ->
                                 ExportScreen(

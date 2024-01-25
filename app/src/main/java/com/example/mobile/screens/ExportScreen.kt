@@ -100,10 +100,9 @@ fun ExportScreen(
 
 
     fun notifyUser(endpointId: String) {
-        NotificationHelper.sendNotification(
+        NotificationHelper.sendProximityNotification(
             context.getString(R.string.notification_title_endpoint_found),
             context.getString(R.string.notification_content_endpoint_found) + " " + endpointId,
-            context,
             endpointId
         )
     }
