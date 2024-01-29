@@ -16,6 +16,10 @@
     <string name="grid_setting_desc">This setting controls how long should be the side of the squares in the map grid</string>
     <string name="settingscreen_export_button_description">More...</string>
     <string name="settingscreen_export_button">Go to the data import/export settings</string>
+    <string name="settingscreen_newarea_notification_title">Notify in areas with no measurements</string>
+    <string name="settingscreen_newarea_notification_disabled">Notifications are disabled</string>
+    <string name="settingscreen_newarea_notification_enabled">Notifications are enabled</string>
+    <string name="settingscreen_newarea_notification_description">Control new area notifications</string>
     <string name="exportscreen_export_button">Export your local measurements</string>
     <string name="exportscreen_import_button">Import measurements from dump</string>
     <string name="exportscreen_proximity_disabled">Enable proximity share</string>

@@ -186,11 +186,17 @@ fun SettingsScreen(
             options = gridSizes
         )
         SwitchSetting(
-            label = "label",
+            title = context.getString(R.string.settingscreen_newarea_notification_title),
+            label = if(notifyInNewArea) {
+                        context.getString(R.string.settingscreen_newarea_notification_enabled)
+                    } else {
+                        context.getString(R.string.settingscreen_newarea_notification_disabled)
+                    },
             onClick = {
                 notifyInNewArea = !notifyInNewArea
             },
             value = notifyInNewArea,
+            contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
         )
 
         SettingLayout(
