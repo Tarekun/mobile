@@ -44,6 +44,11 @@ interface MeasurementDao {
 
     @Query("SELECT COUNT(*) FROM measurement WHERE monitor = :monitor")
     fun countMeasurementsPerMonitor(monitor: MonitorVariant): Int
+
+    @Query("SELECT EXISTS(" +
+           "SELECT * FROM measurement " +
+           "WHERE latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right)")
+    fun isNewArea(top: Double, bottom: Double, left: Double, right: Double): Boolean
 }
 
 @Entity(tableName = "external_measurement")
@@ -153,5 +158,9 @@ object MeasurementsUtils {
 
     fun getAllExternalMeasurements(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
         return DbManager.externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun isNewArea(top: Double, bottom: Double, left: Double, right: Double): Boolean {
+        return DbManager.measurementDao.isNewArea(top, bottom, left, right)
     }
 }

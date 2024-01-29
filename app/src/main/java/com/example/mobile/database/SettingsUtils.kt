@@ -1,5 +1,6 @@
 package com.example.mobile.database
 
+import android.text.BoringLayout
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
@@ -38,6 +39,7 @@ enum class SettingsNames {
     LTE_MEASUREMENT_NUMBER,
     GRID_UNIT_LENGTH,
     ENABLE_PROXIMITY_SHARE,
+    NOTIFY_IN_NEW_AREA,
 }
 
 data class MonitorSettings(
@@ -51,6 +53,7 @@ data class SettingsTable(
     val lte: MonitorSettings = MonitorSettings(1000 * 60, 10),
     val gridUnitLength: Int = 10,
     val enableProximityShare: Boolean = false,
+    val notifyInNewArea: Boolean = false,
 )
 
 object SettingsUtils {
@@ -74,7 +77,8 @@ object SettingsUtils {
                 (map[SettingsNames.LTE_MEASUREMENT_NUMBER.name] ?: "").toInt(),
             ),
             (map[SettingsNames.GRID_UNIT_LENGTH.name] ?: "").toInt(),
-            (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean()
+            (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean(),
+            (map[SettingsNames.NOTIFY_IN_NEW_AREA.name] ?: "").toBoolean(),
         )
     }
 
@@ -88,6 +92,7 @@ object SettingsUtils {
             Settings(SettingsNames.LTE_MEASUREMENT_NUMBER.name, settings.lte.measurementNumber.toString()),
             Settings(SettingsNames.GRID_UNIT_LENGTH.name, settings.gridUnitLength.toString()),
             Settings(SettingsNames.ENABLE_PROXIMITY_SHARE.name, settings.enableProximityShare.toString()),
+            Settings(SettingsNames.NOTIFY_IN_NEW_AREA.name, settings.notifyInNewArea.toString())
         )
     }
 
