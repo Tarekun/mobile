@@ -1,7 +1,6 @@
 package com.example.mobile.commons
 
 import android.Manifest
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -16,23 +15,21 @@ import com.example.mobile.MainActivity
 import com.example.mobile.R
 
 object NotificationHelper {
-    private const val DEFAULT_CHANNEL = "DEFAULT_CHANNEL"
+    private const val PROXIMITY_SHARE_CHANNEL = "PROXIMITY_SHARE_CHANNEL"
     private const val REQUEST_CODE = 0
     public const val extraEndpointId = "endpointId"
 
     private lateinit var notificationManager: NotificationManager
-    private lateinit var appContext: Context
 
-    fun init(appContext: Context) {
-        notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        this.appContext = appContext
+    fun init(applicationContext: Context) {
+        notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelName = "Your Channel Name"
             val channelDescription = "Your Channel Description"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel =
-                NotificationChannel(DEFAULT_CHANNEL, channelName, importance).apply {
+                NotificationChannel(PROXIMITY_SHARE_CHANNEL, channelName, importance).apply {
                     description = channelDescription
                 }
             notificationManager.createNotificationChannel(channel)
@@ -44,14 +41,18 @@ object NotificationHelper {
         return System.currentTimeMillis().toInt()
     }
 
-    private fun startNotificationIntent(title: String, content: String, intent: Intent) {
+    fun sendNotification(
+        title: String,
+        content: String,
+        context: Context,
+        endpointId: String
+    ) {
+        val intent = Intent(context, MainActivity::class.java)
+        intent.putExtra(extraEndpointId, endpointId)
         val pendingIntent = PendingIntent.getActivity(
-            appContext,
-            REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            context, REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val notification = NotificationCompat.Builder(appContext, DEFAULT_CHANNEL)
+        val builder = NotificationCompat.Builder(context, PROXIMITY_SHARE_CHANNEL)
             //TODO: check this icon
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
@@ -59,32 +60,15 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .build()
 
-        with(NotificationManagerCompat.from(appContext)) {
+        with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
-                    appContext,
+                    context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                notify( generateNotificationId(), notification)
+                notify( generateNotificationId(), builder.build())
             }
         }
-    }
-
-    fun sendNotification(title: String, content: String) {
-        val intent = Intent(appContext, MainActivity::class.java)
-        startNotificationIntent(title, content, intent)
-    }
-
-    fun sendProximityNotification(
-        title: String,
-        content: String,
-        endpointId: String
-    ) {
-        val intent = Intent(appContext, MainActivity::class.java)
-        intent.putExtra(extraEndpointId, endpointId)
-
-        startNotificationIntent(title, content, intent)
     }
 }

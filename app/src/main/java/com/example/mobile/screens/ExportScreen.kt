@@ -32,7 +32,6 @@ import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.commons.NotificationHelper
-import com.example.mobile.composables.SwitchSetting
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
@@ -100,9 +99,10 @@ fun ExportScreen(
 
 
     fun notifyUser(endpointId: String) {
-        NotificationHelper.sendProximityNotification(
+        NotificationHelper.sendNotification(
             context.getString(R.string.notification_title_endpoint_found),
             context.getString(R.string.notification_content_endpoint_found) + " " + endpointId,
+            context,
             endpointId
         )
     }
@@ -203,17 +203,22 @@ fun ExportScreen(
         ) {
             Text(text = context.getString(R.string.exportscreen_export_button))
         }
-        SwitchSetting(
-            label = context.getString(
-                if (enableProximityShare) R.string.exportscreen_proximity_enabled
-                else R.string.exportscreen_proximity_disabled
-            ),
+        OutlinedButton(
             onClick = {
                 enableProximityShare = !enableProximityShare
             },
-            value = enableProximityShare,
-            modifier = spacing,
-        )
+            modifier = spacing
+        ) {
+            Icon(
+                imageVector = if (enableProximityShare) Icons.Default.Check
+                    else Icons.Filled.Clear,
+                contentDescription = "Control proximity share functionality"
+            )
+            Text(text = context.getString(
+                if (enableProximityShare) R.string.exportscreen_proximity_enabled
+                else R.string.exportscreen_proximity_disabled
+            ))
+        }
     }
 
 }

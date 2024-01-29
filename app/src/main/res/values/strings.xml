@@ -22,8 +22,6 @@
     <string name="exportscreen_proximity_enabled">Disable proximity share</string>
     <string name="notification_title_endpoint_found">Connect to share data</string>
     <string name="notification_content_endpoint_found">A device you can share your measurements with was found with endpoint id:</string>
-    <string name="notification_title_new_area">Unexplored area!</string>
-    <string name="notification_content_new_area">You haven\'t performed any measurements where you are now. Open the app and start monitoring</string>
     <string name="permission_failed_dialog_title">Permission denied</string>
     <string name="cancel_button_text">Cancel</string>
     <string name="permission_failed_dialog_content">
