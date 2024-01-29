@@ -188,6 +188,7 @@ fun SwitchSetting(
     label: String,
     value: Boolean,
     onClick: () -> Unit,
+    contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
     SettingLayout(
@@ -200,7 +201,7 @@ fun SwitchSetting(
                 Icon(
                     imageVector = if (value) Icons.Default.Check
                         else Icons.Filled.Clear,
-                    contentDescription = "Control proximity share functionality"
+                    contentDescription = contentDescription
                 )
                 Text(text = label)
             }

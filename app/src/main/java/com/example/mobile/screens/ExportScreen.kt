@@ -212,6 +212,7 @@ fun ExportScreen(
                 enableProximityShare = !enableProximityShare
             },
             value = enableProximityShare,
+            contentDescription = "Control proximity share functionality",
             modifier = spacing,
         )
     }
