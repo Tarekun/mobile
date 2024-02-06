@@ -26,6 +26,7 @@ import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.commons.LocationManager
 import com.example.mobile.commons.NotificationHelper
+import com.example.mobile.monitors.MapMonitor
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.NavigationHistory
@@ -34,9 +35,11 @@ import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.screens.MapActivity
 import com.example.mobile.ui.theme.MobileTheme
+import kotlinx.coroutines.MainScope
 
 
 class MainActivity : ComponentActivity() {
+    private val coroutineScope = MainScope()
     private val audioMonitor by lazy {
         AudioMonitor(applicationContext)
     }
@@ -46,6 +49,10 @@ class MainActivity : ComponentActivity() {
     private val lteMonitor by lazy {
         LteMonitor(applicationContext)
     }
+    private val mapMonitor by lazy {
+        MapMonitor(applicationContext, coroutineScope)
+    }
+
 
     private fun initializeSingletons() {
         DbManager.init(applicationContext)
@@ -100,7 +107,7 @@ class MainActivity : ComponentActivity() {
                             navigationIcon = {
                                 IconButton(onClick = {
                                     // on the monitoring screen this is the settings button
-                                    if (currentScreen == Screens.MONITORING) {
+                                    if (currentScreen == Screens.MONITORING ) {
                                         navigateTo(Screens.SETTINGS)
                                     }
                                     // otherwise it's the navigate back
@@ -110,7 +117,7 @@ class MainActivity : ComponentActivity() {
                                 }) {
                                     Icon(
                                         imageVector =
-                                            if(currentScreen == Screens.MONITORING) Icons.Filled.Settings
+                                        if (currentScreen == Screens.MONITORING ) Icons.Filled.Settings
                                             else Icons.Filled.ArrowBack,
                                         contentDescription = "Go to settings"
                                     )
@@ -128,8 +135,8 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                     ) {
                         if (inUseMonitor == MonitorVariant.MAP) {
-                            MapActivity()
-                        } 
+                            MapActivity(mapMonitor)
+                        }
                         else when (currentScreen) {
                             Screens.MONITORING ->
                                 MonitoringScreen(
@@ -139,7 +146,7 @@ class MainActivity : ComponentActivity() {
                                         MonitorVariant.WIFI -> wifiMonitor
                                         MonitorVariant.LTE -> lteMonitor
                                         //TODO: remove this as the map shouldn't be a monitor at all
-                                        MonitorVariant.MAP -> lteMonitor
+
                                     }
                                 )
                             Screens.SETTINGS ->
@@ -156,6 +163,8 @@ class MainActivity : ComponentActivity() {
                                 ProximityShareScreen(
                                     endpointId = endpointId
                                 )
+                            Screens.MAP ->
+                                MapActivity(mapMonitor)
                         }
                     }
                 }

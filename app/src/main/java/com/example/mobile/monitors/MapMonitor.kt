@@ -6,9 +6,9 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.util.Log
-import androidx.compose.runtime.rememberCoroutineScope
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
+import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -29,6 +29,8 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
     val cellPolygons = mutableMapOf<String, Polygon>()
 
 
+    // Generate the grid
+
     object CurrentState {
         var locationReceivedCalled: Boolean = false
         @Volatile
@@ -38,54 +40,46 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         var gridSystem: Map<String, List<Pair<Double, Double>>> = mapOf()
     }
 
-    companion object {
-        private val bounds = listOf(
-            Pair(44.438739, 11.374712), // coord1
-            Pair(44.512836, 11.442941), // coord2
-            Pair(44.555109, 11.286599), // coord3
-            Pair(44.472604, 11.234347)  // coord4
-        )
-
-        val minLat = bounds.minOf { it.first }
-        val maxLat = bounds.maxOf { it.first }
-        val minLon = bounds.minOf { it.second }
-        val maxLon = bounds.maxOf { it.second }
-
-        val stepLat = 1.0 / 111.0
-        val avgLat = (minLat + maxLat) / 2
-        val stepLon = 1.0 / (111.0 * cos(avgLat * (Math.PI / 180)))
-    }
     fun generateGrid(
-        minLat: Double,
-        maxLat: Double,
-        minLon: Double,
-        maxLon: Double,
-        stepLat: Double,
-        stepLon: Double
+        currentLat: Double,
+        currentLon: Double,
+        numCellsPerSide: Int,
+        gridUnit: Int // Dimensione della cella in metri
     ): Map<String, List<Pair<Double, Double>>> {
         val grid = mutableMapOf<String, List<Pair<Double, Double>>>()
 
-        var currentLat = minLat
+        val metersPerDegree = 111000.0 // approssimativamente 111 km per grado
+        val stepLat = gridUnit.toDouble() / metersPerDegree
+        val stepLon = stepLat / cos(currentLat * (Math.PI / 180))
+
+        // Sposta l'inizio di mezza cella a sinistra e mezza cella in su
+        val startLat = currentLat - (numCellsPerSide / 2) * stepLat + (stepLat / 2)
+        val startLon = currentLon - (numCellsPerSide / 2) * stepLon + (stepLon / 2)
+
+        var cellLat = startLat
         var cellId = 0
-        while (currentLat < maxLat) {
-            var currentLon = minLon
-            while (currentLon < maxLon) {
+        for (i in 0 until numCellsPerSide) {
+            var cellLon = startLon
+            for (j in 0 until numCellsPerSide) {
                 val square = listOf(
-                    Pair(currentLat, currentLon),
-                    Pair(currentLat + stepLat, currentLon),
-                    Pair(currentLat + stepLat, currentLon + stepLon),
-                    Pair(currentLat, currentLon + stepLon),
-                    Pair(currentLat, currentLon) // Close the polygon
+                    Pair(cellLat, cellLon),
+                    Pair(cellLat + stepLat, cellLon),
+                    Pair(cellLat + stepLat, cellLon + stepLon),
+                    Pair(cellLat, cellLon + stepLon),
+                    Pair(cellLat, cellLon) // Close the polygon
                 )
                 val cellName = "cell_${cellId++}"
                 grid[cellName] = square
-                currentLon += stepLon
+                cellLon += stepLon
             }
-            currentLat += stepLat
+            cellLat += stepLat
         }
         CurrentState.gridSystem = grid
         return grid
     }
+
+
+
 
 
     private fun addGridToMap(grid: Map<String, List<Pair<Double, Double>>>, map: GoogleMap) {
@@ -97,7 +91,7 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
                         add(LatLng(coord.first, coord.second))
                     }
                     strokeColor(Color.RED)
-                    fillColor(Color.argb(50, 255, 0, 0))
+                    //fillColor(Color.argb(50, 255, 0, 0))
                 }
                 val polygon = map.addPolygon(polygonOptions)
                 cellPolygons[cellName] = polygon // Memorizza il riferimento al poligono
@@ -114,7 +108,7 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         try {
             val initialLatLng = LatLng(latitude, longitude)
             CurrentState.currentLocationMarker = map.addMarker(MarkerOptions().position(initialLatLng).title("Current Location"))
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(initialLatLng, 15f)) // Aumenta il livello di zoom qui
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(initialLatLng, 13f)) // Aumenta/diminuisce il livello di zoom
             Log.d("setupMap", "currentgrid= $currentGridCell" )
             addGridToMap(grid, map)
         } catch (e: Exception) {
@@ -143,30 +137,36 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
 
     fun monitorLocation(
         context: Context,
-        grid: Map<String, List<Pair<Double, Double>>>,
         map: GoogleMap,
-        onLocationReceived: (Location) -> Unit,
+        gridUnit: Int,
+        onLocationReceived: (Location, Map<String, List<Pair<Double, Double>>>) -> Unit,
     ) {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                Log.d("onlocationChanged", "inside onlocationChanged" )
-                Log.d("onlocationChanged", "$location" )
+                Log.d("MonitorLocation", "gridUnit= $gridUnit" )
+
+                val grid = generateGrid(
+                    currentLat = location.latitude,
+                    currentLon = location.longitude,
+                    numCellsPerSide = 10, // crea una griglia 10x10
+                    gridUnit = gridUnit,
+                )
                 val newCell = findCurrentGridCell(location.latitude, location.longitude, grid)
-                Log.d("onlocationChanged", "newCell= $newCell" )
+                //Log.d("onlocationChanged", "newCell= $newCell" )
 
                 if (!CurrentState.locationReceivedCalled) {
-                    onLocationReceived(location)
                     CurrentState.locationReceivedCalled = true
                     CurrentState.currentGridCell = newCell
-                    Log.d("MonitorLocation", "currentgrid= $currentGridCell" )
+                    //Log.d("MonitorLocation", "currentgrid= $currentGridCell" )
                 }
-                updateLocation(location ,map)
                 if (newCell != CurrentState.currentGridCell) {
                     CurrentState.currentGridCell = newCell
-                    onLocationReceived(location)
                 }
+                updateLocation(location ,map)
+                onLocationReceived(location,grid)
+
             }
         }
 
@@ -178,7 +178,6 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
                 locationListener
             )
         } catch (ex: SecurityException) {
-            Log.d("MapActivity", "inside catch")
             Log.e("MapActivity", "Security Exception: ${ex.message}",ex)
 
         }
@@ -193,33 +192,31 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
     }
 
     fun colorCurrentGrid(monitorType: MonitorVariant, currentGrid: String?) {
-        Log.d("MapUtils", "inside colorCurrentGrid" )
         coroutineScope.launch {
             val lastSignalStrengthList = withContext(Dispatchers.IO) {
                 DbManager.lastSignalStrength(currentGrid, monitorType)
             }
             val averageSignalStrength = calculateAverage(lastSignalStrengthList)
             val classification = classifySignalStrength((averageSignalStrength))
-            Log.d("MapUtils", "classification = $classification" )
-            Log.d("MapUtils", "currentgrid= $currentGrid" )
+            //Log.d("MapUtils", "classification = $classification" )
+            //Log.d("MapUtils", "currentgrid= $currentGrid" )
+
+            val alpha = 128 // Imposta un valore alfa per la trasparenza (0 = completamente trasparente, 255 = completamente opaco)
 
             val color = when (classification) {
-                Classification.NO_DATA -> Color.GRAY
-                Classification.MAX -> Color.GREEN
-                Classification.HIGH -> Color.argb(50, 255, 165, 0) // Arancione
-                Classification.MEDIUM -> Color.YELLOW
-                Classification.LOW -> Color.argb(50, 128, 0, 128) // Viola
-                Classification.MIN -> Color.WHITE
-                Classification.INVALID -> Color.BLACK
+                Classification.NO_DATA -> Color.argb(alpha, 128, 128, 128) // Grigio
+                Classification.MAX -> Color.argb(alpha, 0, 255, 0) // Verde
+                Classification.HIGH -> Color.argb(alpha, 255, 165, 0) // Arancione
+                Classification.MEDIUM -> Color.argb(alpha, 255, 255, 0) // Giallo
+                Classification.LOW -> Color.argb(alpha, 128, 0, 128) // Viola
+                Classification.MIN -> Color.argb(alpha, 255, 255, 255) // Bianco
+                Classification.INVALID -> Color.argb(alpha, 0, 0, 0) // Nero
             }
-            Log.d("MapUtils", "color= $color" )
 
             withContext(Dispatchers.Main) {
-                Log.d("MapUtils", "inside dispatchermain" )
                 // Aggiorna il colore della griglia corrente
                 currentGrid?.let { gridName ->
                     cellPolygons[gridName]?.fillColor = color
-                    Log.d("MapUtils", "color changed" )
                 }
             }
         }
@@ -229,7 +226,7 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
 
     fun calculateAverage(signalStrengthList: List<Double>): Double {
         if (signalStrengthList.isEmpty()) {
-            return Double.NaN // Restituisce un valore Double che rappresenta "INVALID"
+            return Double.NaN // Restituisce un valore Double che rappresenta "NO_DATA"
         }
 
         val sum = signalStrengthList.sum()
