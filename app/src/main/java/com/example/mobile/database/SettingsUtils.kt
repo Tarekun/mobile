@@ -63,7 +63,7 @@ data class SettingsTable(
     val notifyInNewArea: Boolean = false,
     val notifyOnlyAllMonitors: Boolean = false,
     val notifyOnlyAboveLength: Int = 10,
-    val notificationPeriod: Long = 1,
+    val notificationPeriodMs: Long = 24 * 60 * 60 * 1000,
     val lastNotification: Instant = Instant.fromEpochMilliseconds(0),
 )
 
@@ -82,7 +82,7 @@ object SettingsUtils {
             "notifyInNewArea" to SettingsNames.NOTIFY_IN_NEW_AREA.name,
             "notifyOnlyAllMonitors" to SettingsNames.NOTIFY_ONLY_ALL_MONITORS.name,
             "notifyOnlyAboveLength" to SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name,
-            "notificationPeriod" to SettingsNames.NOTIFICATION_PERIOD.name,
+            "notificationPeriodMs" to SettingsNames.NOTIFICATION_PERIOD.name,
             "lastNotification" to SettingsNames.LAST_NOTIFICATION.name,
         )
         var result = nameConversionTable[property.name] ?: throw RuntimeException("TODO: define message")
@@ -123,7 +123,7 @@ object SettingsUtils {
             notifyInNewArea = (map[SettingsNames.NOTIFY_IN_NEW_AREA.name] ?: "").toBoolean(),
             notifyOnlyAllMonitors = (map[SettingsNames.NOTIFY_ONLY_ALL_MONITORS.name] ?: "").toBoolean(),
             notifyOnlyAboveLength = (map[SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name] ?: "").toInt(),
-            notificationPeriod = (map[SettingsNames.NOTIFICATION_PERIOD.name] ?: "").toLong(),
+            notificationPeriodMs = (map[SettingsNames.NOTIFICATION_PERIOD.name] ?: "").toLong(),
             lastNotification = (Instant.parse(map[SettingsNames.LAST_NOTIFICATION.name] ?: ""))
         )
     }
