@@ -7,6 +7,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.memberProperties
 
 @Entity(tableName = "settings")
 data class Settings(
@@ -57,46 +59,80 @@ data class SettingsTable(
 )
 
 object SettingsUtils {
-    //TODO: find improvement for this
+
+    private fun getSettingNameOrThrow(
+        property: KProperty1<SettingsTable, *>,
+        forMonitorPeriod: Boolean = false
+    ): String {
+        val nameConversionTable = mapOf<String, String>(
+            "audio" to "AUDIO",
+            "wifi" to "WIFI",
+            "lte" to "LTE",
+            "gridUnitLength" to SettingsNames.GRID_UNIT_LENGTH.name,
+            "enableProximityShare" to SettingsNames.ENABLE_PROXIMITY_SHARE.name,
+            "notifyInNewArea" to SettingsNames.NOTIFY_IN_NEW_AREA.name,
+        )
+        var result = nameConversionTable[property.name] ?: throw RuntimeException("TODO: define message")
+
+        if (property.name in listOf( "audio", "wifi", "lte")) {
+            // removes the leading "AUDIO" substring from these monitor setting names since
+            // the monitor specific name is already in `result`
+            val audioWordLength = "AUDIO".length
+            if (forMonitorPeriod) {
+                result += SettingsNames.AUDIO_MONITOR_PERIOD.name.substring(audioWordLength)
+            } else {
+                result += SettingsNames.AUDIO_MEASUREMENT_NUMBER.name.substring(audioWordLength)
+            }
+        }
+        return result
+    }
+
     private fun makeSettingsTable(settings: List<Settings>): SettingsTable {
         val map = mutableMapOf<String, String>()
         for (setting in settings) {
             map[setting.name] = setting.value
         }
         return SettingsTable(
-            MonitorSettings(
-                (map[SettingsNames.AUDIO_MONITOR_PERIOD.name] ?: "").toLong(),
-                (map[SettingsNames.AUDIO_MEASUREMENT_NUMBER.name] ?: "").toInt(),
+            audio = MonitorSettings(
+                monitorPeriod = (map[SettingsNames.AUDIO_MONITOR_PERIOD.name] ?: "").toLong(),
+                measurementNumber = (map[SettingsNames.AUDIO_MEASUREMENT_NUMBER.name] ?: "").toInt(),
             ),
-            MonitorSettings(
-                (map[SettingsNames.WIFI_MONITOR_PERIOD.name] ?: "").toLong(),
-                (map[SettingsNames.WIFI_MEASUREMENT_NUMBER.name] ?: "").toInt(),
+            wifi = MonitorSettings(
+                monitorPeriod = (map[SettingsNames.WIFI_MONITOR_PERIOD.name] ?: "").toLong(),
+                measurementNumber = (map[SettingsNames.WIFI_MEASUREMENT_NUMBER.name] ?: "").toInt(),
             ),
-            MonitorSettings(
-                (map[SettingsNames.LTE_MONITOR_PERIOD.name] ?: "").toLong(),
-                (map[SettingsNames.LTE_MEASUREMENT_NUMBER.name] ?: "").toInt(),
+            lte = MonitorSettings(
+                monitorPeriod = (map[SettingsNames.LTE_MONITOR_PERIOD.name] ?: "").toLong(),
+                measurementNumber = (map[SettingsNames.LTE_MEASUREMENT_NUMBER.name] ?: "").toInt(),
             ),
-            (map[SettingsNames.GRID_UNIT_LENGTH.name] ?: "").toInt(),
-            (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean(),
-            (map[SettingsNames.NOTIFY_IN_NEW_AREA.name] ?: "").toBoolean(),
+            gridUnitLength = (map[SettingsNames.GRID_UNIT_LENGTH.name] ?: "").toInt(),
+            enableProximityShare = (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean(),
+            notifyInNewArea = (map[SettingsNames.NOTIFY_IN_NEW_AREA.name] ?: "").toBoolean(),
         )
     }
 
     private fun makeSettingsList(settings: SettingsTable): List<Settings> {
-        return listOf(
-            Settings(SettingsNames.AUDIO_MONITOR_PERIOD.name, settings.audio.monitorPeriod.toString()),
-            Settings(SettingsNames.WIFI_MONITOR_PERIOD.name, settings.wifi.monitorPeriod.toString()),
-            Settings(SettingsNames.LTE_MONITOR_PERIOD.name, settings.lte.monitorPeriod.toString()),
-            Settings(SettingsNames.AUDIO_MEASUREMENT_NUMBER.name, settings.audio.measurementNumber.toString()),
-            Settings(SettingsNames.WIFI_MEASUREMENT_NUMBER.name, settings.wifi.measurementNumber.toString()),
-            Settings(SettingsNames.LTE_MEASUREMENT_NUMBER.name, settings.lte.measurementNumber.toString()),
-            Settings(SettingsNames.GRID_UNIT_LENGTH.name, settings.gridUnitLength.toString()),
-            Settings(SettingsNames.ENABLE_PROXIMITY_SHARE.name, settings.enableProximityShare.toString()),
-            Settings(SettingsNames.NOTIFY_IN_NEW_AREA.name, settings.notifyInNewArea.toString())
-        )
+        val result = mutableListOf<Settings>()
+
+        for (property in SettingsTable::class.memberProperties) {
+            when (val value = property.get(settings)) {
+                is MonitorSettings -> {
+                    result.add(Settings(
+                        getSettingNameOrThrow(property, forMonitorPeriod = true),
+                        value.monitorPeriod.toString()
+                    ))
+                    result.add(Settings(
+                        getSettingNameOrThrow(property, forMonitorPeriod = false),
+                        value.measurementNumber.toString()
+                    ))
+                }
+                is Int, is Boolean -> {
+                    result.add(Settings(getSettingNameOrThrow(property), value.toString()))
+                }
+            }
+        }
+        return result
     }
-
-
 
     // avoids name clash at compile time between this and the getter function
     @get:JvmName("storedSettings")
