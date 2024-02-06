@@ -37,5 +37,19 @@
         \n- The audio monitor needs access to your phone\'s microphone to compute the noise
         \n- The LTE monitor needs access to your mobile phone network to test the connectivity of the SIM
     </string>
+    <string name="settingscreen_collapse_notification_title">More notification settings...</string>
+    <string name="settingscreen_all_monitors_title">Only for all monitor</string>
+    <string name="settingscreen_all_monitors_description">When this is enabled, you will only be notified if you\'re in a new area for all monitors</string>
+    <string name="settingscreen_all_monitors_enabled">All monitors</string>
+    <string name="settingscreen_all_monitors_disabled">If new for any monitor</string>
+    <string name="settingscreen_notification_area_title">Notify only for areas of side</string>
+    <string name="settingscreen_notification_frequency_title">Notify at most</string>
+    <string name="settingscreen_notification_frequency_description">Controls how frequently you can be notified</string>
+    <string name="settingscreen_notification_frequency_always">As soon as you enter a new area</string>
+    <string name="settingscreen_notification_frequency_tad">Twice a day</string>
+    <string name="settingscreen_notification_frequency_oad">Once a day</string>
+    <string name="settingscreen_notification_frequency_oaw">Once a week</string>
+    <string name="settings_collapsable_description">open collapsable menu and show content</string>
+
 
 </resources>

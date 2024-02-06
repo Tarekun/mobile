@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import kotlinx.datetime.Instant
+import java.lang.IllegalArgumentException
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -85,7 +86,7 @@ object SettingsUtils {
             "notificationPeriodMs" to SettingsNames.NOTIFICATION_PERIOD.name,
             "lastNotification" to SettingsNames.LAST_NOTIFICATION.name,
         )
-        var result = nameConversionTable[property.name] ?: throw RuntimeException("TODO: define message")
+        var result = nameConversionTable[property.name] ?: throw IllegalArgumentException("Property name ${property.name} is not mapped to any setting")
 
         if (property.name in listOf( "audio", "wifi", "lte")) {
             // removes the leading "AUDIO" substring from these monitor setting names since

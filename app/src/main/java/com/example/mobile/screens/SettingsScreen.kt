@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.mobile.R
 import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
+import com.example.mobile.composables.CollapsableSettings
 import com.example.mobile.composables.NumberSetting
 import com.example.mobile.composables.OptionsSetting
 import com.example.mobile.composables.SettingLayout
@@ -42,10 +43,10 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     //TODO: properly initialize
     val gridSizes = listOf(10, 100, 1000)
+    val notificationFrequencies = listOf<Long>(0, 1000*60*60*12, 1000*60*60*24, 1000*60*60*24*7)
 
     var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
-    var notifyInNewArea by remember { mutableStateOf(false) }
     var initializing by remember { mutableStateOf(true) }
 
     fun setMonitorSettings() {
@@ -56,13 +57,6 @@ fun SettingsScreen(
         }
     }
 
-//    fun startNotifyingInNewArea() {
-//        LocationManager.startNotifyingInNewArea()
-//    }
-//    fun stopNotifying() {
-//        LocationManager.stopNotifying()
-//    }
-
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             settings = SettingsUtils.storedSettings
@@ -70,37 +64,24 @@ fun SettingsScreen(
             initializing = false
         }
     }
+    LaunchedEffect(variant) {
+        if(!initializing) setMonitorSettings()
+    }
+
     LaunchedEffect(settings) {
+        if (settings == null || initializing) return@LaunchedEffect
+
         withContext(Dispatchers.IO) {
             if (!initializing) {
                 SettingsUtils.updateSettings(settings!!)
                 setMonitorSettings()
             }
         }
-    }
-    LaunchedEffect(variant) {
-        if(!initializing) setMonitorSettings()
-    }
 
-    var skipFirst by remember { mutableStateOf(true) }
-    LaunchedEffect(notifyInNewArea) {
-        if (notifyInNewArea) {
+        if (settings!!.notifyInNewArea) {
             startNotifyingInNewArea()
-        }
-        else {
+        } else {
             stopNotifying()
-        }
-        // on the first render we shouldn't override the setting with false
-        if (skipFirst) {
-            skipFirst = false
-        }
-        else {
-            withContext(Dispatchers.IO) {
-                SettingsUtils.updateSingleSetting(
-                    SettingsNames.NOTIFY_IN_NEW_AREA,
-                    notifyInNewArea.toString()
-                )
-            }
         }
     }
 
@@ -173,7 +154,7 @@ fun SettingsScreen(
         OptionsSetting(
             title = context.getString(R.string.grid_setting_title),
             description = context.getString(R.string.grid_setting_desc),
-            value = settings?.gridUnitLength ?: 0,
+            value = settings!!.gridUnitLength,
             onChange = {
                 settings = settings!!.copy(
                     gridUnitLength = it
@@ -183,20 +164,85 @@ fun SettingsScreen(
         )
         SwitchSetting(
             title = context.getString(R.string.settingscreen_newarea_notification_title),
-            label = if(notifyInNewArea) {
+            label = if(settings!!.notifyInNewArea) {
                         context.getString(R.string.settingscreen_newarea_notification_enabled)
                     } else {
                         context.getString(R.string.settingscreen_newarea_notification_disabled)
                     },
             onClick = {
-                notifyInNewArea = !notifyInNewArea
+                settings = settings!!.copy(notifyInNewArea = !(settings!!.notifyInNewArea))
             },
-            value = notifyInNewArea,
+            value = settings!!.notifyInNewArea,
             contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
         )
 
+        CollapsableSettings(
+            label = context.getString(R.string.settingscreen_collapse_notification_title),
+            content = {
+                Column {
+                    SwitchSetting(
+                        title = context.getString(R.string.settingscreen_all_monitors_title),
+                        description = context.getString(R.string.settingscreen_all_monitors_description),
+                        label = if (settings!!.notifyOnlyAllMonitors) {
+                            context.getString(R.string.settingscreen_all_monitors_enabled)
+                        } else {
+                            context.getString(R.string.settingscreen_all_monitors_disabled)
+                        },
+                        onClick = {
+                            settings =
+                                settings!!.copy(notifyOnlyAllMonitors = !(settings!!.notifyOnlyAllMonitors))
+                        },
+                        value = settings!!.notifyOnlyAllMonitors,
+                        contentDescription = context.getString(R.string.settingscreen_all_monitors_description)
+                    )
+
+                    OptionsSetting(
+                        title = context.getString(R.string.settingscreen_notification_area_title),
+                        value = settings!!.notifyOnlyAboveLength,
+                        onChange = {
+                            settings = settings!!.copy(
+                                notifyOnlyAboveLength = it
+                            )
+                        },
+                        options = gridSizes,
+                        getLabel = { "$it m" }
+                    )
+
+                    OptionsSetting<Long>(
+                        title = context.getString(R.string.settingscreen_notification_frequency_title),
+                        description = context.getString(R.string.settingscreen_notification_frequency_description),
+                        value = settings!!.notificationPeriodMs,
+                        onChange = {
+                            settings = settings!!.copy(
+                                notificationPeriodMs = it
+                            )
+                        },
+                        // no cooldown, half a day, a day, a week
+                        options = notificationFrequencies,
+                        getLabel = {
+                            when (it) {
+                                notificationFrequencies[0] ->
+                                    context.getString(R.string.settingscreen_notification_frequency_always)
+
+                                notificationFrequencies[1] ->
+                                    context.getString(R.string.settingscreen_notification_frequency_tad)
+
+                                notificationFrequencies[2] ->
+                                    context.getString(R.string.settingscreen_notification_frequency_oad)
+
+                                notificationFrequencies[3] ->
+                                    context.getString(R.string.settingscreen_notification_frequency_oaw)
+
+                                else ->
+                                    it.toString()
+                            }
+                        }
+                    )
+                }
+            }
+        )
+
         SettingLayout(
-            title = context.getString(R.string.settingscreen_export_button_description),
             inputField = {
                 OutlinedButton(
                     onClick = { navigateTo(Screens.EXPORT) },
