@@ -26,6 +26,7 @@ data class Measurement(
     val timestamp: Instant,
     val latitude: Double,
     val longitude: Double,
+    val grid : String? = null,
 )
 
 @Dao
@@ -49,6 +50,9 @@ interface MeasurementDao {
            "SELECT * FROM measurement " +
            "WHERE latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right)")
     fun isNewArea(top: Double, bottom: Double, left: Double, right: Double): Boolean
+    
+    @Query("SELECT signalStrength FROM measurement WHERE grid = :gridName AND monitor = :monitorType ORDER BY timestamp DESC LIMIT 5")
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>
 }
 
 @Entity(tableName = "external_measurement")
@@ -89,7 +93,8 @@ enum class Classification(val intValue: Int) {
     MEDIUM(2),
     LOW(1),
     MIN(0),
-    INVALID(-1)
+    INVALID(-1),
+    NO_DATA(-2) // Assegnato un valore negativo per indicare "NO_DATA"
 }
 
 object MeasurementsUtils {

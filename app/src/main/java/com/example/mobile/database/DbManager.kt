@@ -76,7 +76,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
@@ -104,4 +106,59 @@ object DbManager {
         _settingsDao = db.settingsDao()
     }
 
+    fun storeMeasurement(measurement: Measurement) {
+        measurementDao.insert(measurement)
+    }
+
+    fun storeManyExternalMeasurement(measurements: List<ExternalMeasurement>) {
+        externalMeasurementDao.insertMany(measurements)
+    }
+
+    fun findAllMeasurementsPerVariant(variant: MonitorVariant): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant)
+    }
+
+    fun countMeasurement(variant: MonitorVariant): Int {
+        return measurementDao.countMeasurementsPerMonitor(variant)
+    }
+
+    fun countExternalMeasurement(variant: MonitorVariant): Int {
+        return externalMeasurementDao.countExternalMeasurementsPerMonitor(variant)
+    }
+
+    fun getAllMeasurements(): List<Measurement> {
+        return measurementDao.getAllMeasurements()
+    }
+
+    fun getAllExternalMeasurements(): List<ExternalMeasurement> {
+        return externalMeasurementDao.getAllExternalMeasurements()
+    }
+
+    fun findSettingByName(name: String): Settings? {
+        return settingsDao.findByName(name)
+    }
+
+    fun findAllSettings(): List<Settings> {
+        return settingsDao.getAllSettings()
+    }
+
+    fun updateAllSettings(settings: List<Settings>) {
+        settingsDao.insertOrUpdateAllSettings(settings)
+    }
+
+    fun updateSingleSetting(setting: Settings) {
+        settingsDao.insertOrUpdateSetting(setting)
+    }
+
+    fun getAllMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<Measurement> {
+        return measurementDao.getAllMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun getAllExternalMeasurementsPerMonitor(variant: MonitorVariant, maxNumber: Int): List<ExternalMeasurement> {
+        return externalMeasurementDao.getAllExternalMeasurementsPerMonitor(variant, maxNumber)
+    }
+
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>{
+        return measurementDao.lastSignalStrength(gridName,monitorType)
+    }
 }
