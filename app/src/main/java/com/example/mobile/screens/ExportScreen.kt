@@ -9,10 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +27,7 @@ import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
-import com.example.mobile.commons.NotificationHelper
+import com.example.mobile.misc.NotificationHelper
 import com.example.mobile.composables.SwitchSetting
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions

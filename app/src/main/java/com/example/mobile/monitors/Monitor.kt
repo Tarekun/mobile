@@ -4,7 +4,7 @@ import android.content.Context
 import com.example.mobile.database.Classification
 import com.example.mobile.database.Measurement
 import com.example.mobile.database.MeasurementsUtils
-import com.example.mobile.commons.LocationManager
+import com.example.mobile.misc.LocationManager
 import java.lang.IllegalStateException
 
 enum class MonitorVariant {

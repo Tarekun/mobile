@@ -1,4 +1,4 @@
-package com.example.mobile.commons
+package com.example.mobile.misc
 
 import android.os.Looper
 import androidx.annotation.RequiresPermission

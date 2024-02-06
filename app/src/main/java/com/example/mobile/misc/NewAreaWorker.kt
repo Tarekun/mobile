@@ -1,7 +1,6 @@
-package com.example.mobile.commons
+package com.example.mobile.misc
 
 import android.content.Context
-import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.mobile.R
