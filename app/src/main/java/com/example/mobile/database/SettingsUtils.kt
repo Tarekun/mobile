@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import kotlinx.datetime.Instant
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -42,6 +43,10 @@ enum class SettingsNames {
     GRID_UNIT_LENGTH,
     ENABLE_PROXIMITY_SHARE,
     NOTIFY_IN_NEW_AREA,
+    NOTIFY_ONLY_ALL_MONITORS,
+    NOTIFY_ONLY_ABOVE_LENGTH,
+    NOTIFICATION_PERIOD,
+    LAST_NOTIFICATION
 }
 
 data class MonitorSettings(
@@ -56,6 +61,10 @@ data class SettingsTable(
     val gridUnitLength: Int = 10,
     val enableProximityShare: Boolean = false,
     val notifyInNewArea: Boolean = false,
+    val notifyOnlyAllMonitors: Boolean = false,
+    val notifyOnlyAboveLength: Int = 10,
+    val notificationPeriod: Long = 1,
+    val lastNotification: Instant = Instant.fromEpochMilliseconds(0),
 )
 
 object SettingsUtils {
@@ -71,6 +80,10 @@ object SettingsUtils {
             "gridUnitLength" to SettingsNames.GRID_UNIT_LENGTH.name,
             "enableProximityShare" to SettingsNames.ENABLE_PROXIMITY_SHARE.name,
             "notifyInNewArea" to SettingsNames.NOTIFY_IN_NEW_AREA.name,
+            "notifyOnlyAllMonitors" to SettingsNames.NOTIFY_ONLY_ALL_MONITORS.name,
+            "notifyOnlyAboveLength" to SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name,
+            "notificationPeriod" to SettingsNames.NOTIFICATION_PERIOD.name,
+            "lastNotification" to SettingsNames.LAST_NOTIFICATION.name,
         )
         var result = nameConversionTable[property.name] ?: throw RuntimeException("TODO: define message")
 
@@ -108,6 +121,10 @@ object SettingsUtils {
             gridUnitLength = (map[SettingsNames.GRID_UNIT_LENGTH.name] ?: "").toInt(),
             enableProximityShare = (map[SettingsNames.ENABLE_PROXIMITY_SHARE.name] ?: "").toBoolean(),
             notifyInNewArea = (map[SettingsNames.NOTIFY_IN_NEW_AREA.name] ?: "").toBoolean(),
+            notifyOnlyAllMonitors = (map[SettingsNames.NOTIFY_ONLY_ALL_MONITORS.name] ?: "").toBoolean(),
+            notifyOnlyAboveLength = (map[SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name] ?: "").toInt(),
+            notificationPeriod = (map[SettingsNames.NOTIFICATION_PERIOD.name] ?: "").toLong(),
+            lastNotification = (Instant.parse(map[SettingsNames.LAST_NOTIFICATION.name] ?: ""))
         )
     }
 
@@ -126,7 +143,7 @@ object SettingsUtils {
                         value.measurementNumber.toString()
                     ))
                 }
-                is Int, is Boolean -> {
+                is Int, is Long, is Boolean, is Instant -> {
                     result.add(Settings(getSettingNameOrThrow(property), value.toString()))
                 }
             }
