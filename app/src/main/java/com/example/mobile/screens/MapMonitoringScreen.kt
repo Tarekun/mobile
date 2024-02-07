@@ -27,91 +27,116 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.mobile.commons.LocationManager
 import com.example.mobile.database.SettingsUtils
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
+import com.example.mobile.monitors.MonitorVariant
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
+
+@Composable
+fun LegendItem(name: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(1.dp) // Ancora meno padding per ogni voce
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)  // Ulteriore riduzione delle dimensioni del quadrato
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(2.dp)) // Riduzione dello spazio tra quadrato e testo
+        Text(name, fontSize = 8.sp) // Riduzione ulteriore delle dimensioni del testo
+    }
+}
+
+@Composable
+fun LegendView(gridUnitLength: Int, modifier: Modifier = Modifier) {
+    val Orange = Color(0xFFFFA500) // ARGB per Arancione
+    val Purple = Color(0xFF800080) // ARGB per Viola
+    Column(
+        modifier = Modifier
+            .padding(4.dp) // Padding esterno
+            .background(Color(0x66FFFFFF)) // Sfondo semitrasparente
+            .padding(4.dp) // Padding interno
+    ) {
+        Text("Legenda:", fontWeight = FontWeight.Bold, fontSize = 10.sp)
+        LegendItem("Nessun Dato", Color.Gray)
+        LegendItem("Massimo", Color.Green)
+        LegendItem("Alto", Orange)
+        LegendItem("Medio", Color.Yellow)
+        LegendItem("Basso", Purple)
+        LegendItem("Minimo", Color.White)
+        LegendItem("Invalido", Color.Black)
+
+        Text("Dimensione delle celle: $gridUnitLength metri", fontSize = 8.sp)
+    }
+}
 @Composable
 fun MapActivity (mapMonitor: MapMonitor){
     val context = LocalContext.current
-    val gridUnitLengthState = remember { mutableIntStateOf(0) } // Inizializzato con un valore di default
+    val gridUnitLengthState = remember { mutableIntStateOf(0) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }
-    val Orange = Color(0xFFFFA500) // ARGB per Arancione
-    val Purple = Color(0xFF800080) // ARGB per Viola
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    var sharedGrid  by remember {mutableStateOf<Map<String, List<Pair<Double, Double>>>?>(null)}
+    val monitor
 
+
+    // Funzione per aggiornare la posizione attuale
+    fun updateCurrentLocation() {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            currentLocation = location?.let { LatLng(it.latitude, it.longitude) }
+        }.addOnFailureListener {
+            // Gestione dell'errore, ad esempio impostando una posizione predefinita
+            currentLocation = LatLng(0.0, 0.0) // Posizione predefinita
+        }
+    }
 
     // Launcher per la richiesta del permesso di localizzazione
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         hasLocationPermission = isGranted
-        // Altre azioni in caso di concessione o negazione del permesso
+        if (isGranted) {
+            // Ottieni la posizione attuale solo se il permesso è stato concesso
+            updateCurrentLocation()
+        }
     }
 
-    LaunchedEffect(key1 = true) {
-        // Controlla e richiede i permessi
+    LaunchedEffect(key1 = Unit) {
+        // Controlla se i permessi sono già stati concessi
         hasLocationPermission = ContextCompat.checkSelfPermission(
             context,
             android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (!hasLocationPermission) {
+        if (hasLocationPermission) {
+            // Ottieni la posizione attuale
+            updateCurrentLocation()
+        } else {
+            // Richiedi il permesso di localizzazione
             locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
-        // Esegui le operazioni del database nel contesto IO
-        withContext(Dispatchers.IO) {
-            val settings = SettingsUtils.getStoredSettings()
-            withContext(Dispatchers.Main) {
-                // Aggiorna lo stato sul thread principale
-                gridUnitLengthState.value = settings.gridUnitLength
-            }
+        // Carica le impostazioni dall'IO
+        val settings = withContext(Dispatchers.IO) {
+            SettingsUtils.getStoredSettings()
         }
+        // Aggiorna lo stato sul thread principale
+        gridUnitLengthState.value = settings.gridUnitLength
     }
 
-    @Composable
-    fun LegendItem(name: String, color: Color) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(1.dp) // Ancora meno padding per ogni voce
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)  // Ulteriore riduzione delle dimensioni del quadrato
-                    .background(color)
-            )
-            Spacer(modifier = Modifier.width(2.dp)) // Riduzione dello spazio tra quadrato e testo
-            Text(name, fontSize = 8.sp) // Riduzione ulteriore delle dimensioni del testo
-        }
-    }
-
-    @Composable
-    fun LegendView(gridUnitLength: Int, modifier: Modifier = Modifier) {
-        Column(
-            modifier = Modifier
-                .padding(4.dp) // Padding esterno
-                .background(Color(0x66FFFFFF)) // Sfondo semitrasparente
-                .padding(4.dp) // Padding interno
-        ) {
-            Text("Legenda:", fontWeight = FontWeight.Bold, fontSize = 10.sp)
-            LegendItem("Nessun Dato", Color.Gray)
-            LegendItem("Massimo", Color.Green)
-            LegendItem("Alto", Orange)
-            LegendItem("Medio", Color.Yellow)
-            LegendItem("Basso", Purple)
-            LegendItem("Minimo", Color.White)
-            LegendItem("Invalido", Color.Black)
-
-            Text("Dimensione delle celle: $gridUnitLength metri", fontSize = 8.sp)
-        }
-    }
-
-
-
-
-    if (hasLocationPermission) {
+    if (hasLocationPermission && currentLocation != null ) {
+        val currentLatLng = currentLocation!!
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(
                 factory = { context ->
@@ -121,21 +146,41 @@ fun MapActivity (mapMonitor: MapMonitor){
                             onResume()
                             getMapAsync { googleMap ->
                                 Log.d("MapActivity", "Map is ready")
+
+                                // Ottieni la posizione corrente da un gestore di localizzazione o una fonte affidabile
+
+                                val gridUnit = gridUnitLengthState.value
+                                Log.d("MapActivity", "gridUnit:$gridUnit")
+
+                                // Imposta il livello di zoom iniziale e sposta la camera sulla posizione corrente
+                                val initialZoomLevel = 14f // Scegli un livello di zoom iniziale adeguato
+                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, initialZoomLevel))
+
+                                // Inizializza lastZoomLevel con il livello di zoom iniziale
+                                var lastZoomLevel = initialZoomLevel
+                                Log.d("MapActivity", "zoom:$lastZoomLevel")
+
+                                googleMap.setOnCameraIdleListener {
+                                    // Questo listener viene chiamato dopo che la camera ha finito di muoversi e lo zoom è stato applicato
+                                    val lastZoomLevel = googleMap.cameraPosition.zoom
+                                    val mapBounds = googleMap.projection.visibleRegion.latLngBounds
+                                    Log.d("MapActivity", "Zoom after moveCamera: $lastZoomLevel")
+                                    Log.d("MapActivity", "Bounds after zoom: $mapBounds")
+
+                                    // Genera la griglia basata sui bounds attuali
+                                    val grid = mapMonitor.generateGrid(mapBounds, gridUnit)
+                                    sharedGrid = grid
+                                    mapMonitor.applyGridToMap(grid,googleMap, currentLatLng)
+                                }
+
                                 mapMonitor.monitorLocation(
                                     context = context,
                                     map = googleMap,
-                                    gridUnit = gridUnitLengthState.value
-                                ) { location, grid ->
-                                    Log.d("Anndroidview", "Map setting up")
-                                    //Log.d("Anndroidview", "currentgrid= ${MapMonitor.CurrentState.currentGridCell}" )
-                                    mapMonitor.setupMap(
-                                        location.latitude,
-                                        location.longitude,
-                                        googleMap,
-                                        grid
-                                    )
-                                }
+                                    grid = sharedGrid ?: emptyMap()
+                                ) {
+                                    mapMonitor.colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell)
 
+                                }
                             }
 
                         } catch (e: Exception) {
