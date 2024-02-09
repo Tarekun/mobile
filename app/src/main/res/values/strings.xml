@@ -13,8 +13,7 @@
     <string name="measurement_setting_desc">This setting controls how many of the last measurements are counted per area on the grid, when evaluating measurements on the map</string>
     <string name="grid_setting_title">Grid unit length</string>
     <string name="grid_setting_desc">This setting controls how long should be the side of the squares in the map grid</string>
-    <string name="settingscreen_export_button_description">More...</string>
-    <string name="settingscreen_export_button">Go to the data import/export settings</string>
+    <string name="settingscreen_export_menu">Import/export settings</string>
     <string name="settingscreen_newarea_notification_title">Notify in areas with no measurements</string>
     <string name="settingscreen_newarea_notification_disabled">Notifications are disabled</string>
     <string name="settingscreen_newarea_notification_enabled">Notifications are enabled</string>

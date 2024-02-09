@@ -32,7 +32,6 @@ import com.example.mobile.misc.NotificationHelper
 import com.example.mobile.map.MapScreen
 import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.Screens
-import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.SettingsScreen
@@ -166,11 +165,7 @@ class MainActivity : ComponentActivity() {
                                     variant = inUseMonitor,
                                     navigateTo = { navigateTo(it) },
                                     startNotifyingInNewArea = {startNotifyingInNewArea()},
-                                    stopNotifying = {stopNotifying()}
-                                )
-                            Screens.EXPORT ->
-                                ExportScreen(
-                                    variant = inUseMonitor,
+                                    stopNotifying = {stopNotifying()},
                                     startIntent = { this@MainActivity.startActivity(it) },
                                 )
                             Screens.PROXIMITY_SHARE ->

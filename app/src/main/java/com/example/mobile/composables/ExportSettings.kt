@@ -1,4 +1,4 @@
-package com.example.mobile.screens
+package com.example.mobile.composables
 
 import android.app.Activity
 import android.content.Intent
@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -23,13 +24,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.mobile.R
-import com.example.mobile.composables.SettingLayout
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.misc.NotificationHelper
-import com.example.mobile.composables.SwitchSetting
+import com.example.mobile.screens.makeSendConnectionCallback
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
@@ -48,7 +48,7 @@ const val serviceId: String = "proximityShare"
 val strategy = Strategy.P2P_POINT_TO_POINT
 
 @Composable
-fun ExportScreen(
+fun ExportSettings(
     variant: MonitorVariant,
     startIntent: (intent: Intent) -> Unit,
 ) {
@@ -189,7 +189,8 @@ fun ExportScreen(
                     onClick = {
                         importDump()
                     },
-//                    modifier = spacing
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(text = context.getString(R.string.exportscreen_import_button))
                 }
@@ -201,7 +202,8 @@ fun ExportScreen(
                     onClick = {
                         export()
                     },
-//                    modifier = spacing
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(text = context.getString(R.string.exportscreen_export_button))
                 }

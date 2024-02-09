@@ -1,5 +1,6 @@
 package com.example.mobile.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import com.example.mobile.R
 import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
 import com.example.mobile.composables.CollapsableSettings
+import com.example.mobile.composables.ExportSettings
 import com.example.mobile.composables.NumberSetting
 import com.example.mobile.composables.OptionsSetting
 import com.example.mobile.composables.SettingLayout
@@ -38,6 +40,7 @@ fun SettingsScreen(
     navigateTo: (targetScreen: Screens) -> Unit,
     startNotifyingInNewArea: () -> Unit,
     stopNotifying: () -> Unit,
+    startIntent: (intent: Intent) -> Unit,
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -164,19 +167,6 @@ fun SettingsScreen(
             options = gridSizes
         )
         SwitchSetting(
-            title = context.getString(R.string.settingscreen_newarea_notification_title),
-            label = if(settings!!.notifyInNewArea) {
-                        context.getString(R.string.settingscreen_newarea_notification_enabled)
-                    } else {
-                        context.getString(R.string.settingscreen_newarea_notification_disabled)
-                    },
-            onClick = {
-                settings = settings!!.copy(notifyInNewArea = !(settings!!.notifyInNewArea))
-            },
-            value = settings!!.notifyInNewArea,
-            contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
-        )
-        SwitchSetting(
             title = context.getString(R.string.settingscreen_external_title),
             label = if(settings!!.includeExternal) {
                 context.getString(R.string.settingscreen_external_enabled)
@@ -190,6 +180,19 @@ fun SettingsScreen(
             contentDescription = context.getString(R.string.settingscreen_external_description)
         )
 
+        SwitchSetting(
+            title = context.getString(R.string.settingscreen_newarea_notification_title),
+            label = if(settings!!.notifyInNewArea) {
+                        context.getString(R.string.settingscreen_newarea_notification_enabled)
+                    } else {
+                        context.getString(R.string.settingscreen_newarea_notification_disabled)
+                    },
+            onClick = {
+                settings = settings!!.copy(notifyInNewArea = !(settings!!.notifyInNewArea))
+            },
+            value = settings!!.notifyInNewArea,
+            contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
+        )
         CollapsableSettings(
             label = context.getString(R.string.settingscreen_collapse_notification_title),
             content = {
@@ -255,15 +258,10 @@ fun SettingsScreen(
                 }
             }
         )
-
-        SettingLayout(
-            inputField = {
-                OutlinedButton(
-                    onClick = { navigateTo(Screens.EXPORT) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(context.getString(R.string.settingscreen_export_button))
-                }
+        CollapsableSettings(
+            label = context.getString(R.string.settingscreen_export_menu),
+            content = {
+                ExportSettings(variant = variant, startIntent = startIntent)
             }
         )
     }

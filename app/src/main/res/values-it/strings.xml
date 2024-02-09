@@ -11,8 +11,7 @@
     <string name="measurement_setting_desc">Quest\'impostazione controlla quante misurazioni sono usate per creare la griglia della mappa</string>
     <string name="grid_setting_title">Lunghezza di un\'unità della griglia</string>
     <string name="grid_setting_desc">Quest\'impostazione controlla quanto lungo dev\'essere il lato di un quadrato della griglia. L\'unità è in metri</string>
-    <string name="settingscreen_export_button_description">Altro...</string>
-    <string name="settingscreen_export_button">Vai alle impostazioni di import/export</string>
+    <string name="settingscreen_export_menu">Impostazioni di import/export</string>
     <string name="settingscreen_newarea_notification_title">Notifica in aree senza misurazioni</string>
     <string name="settingscreen_newarea_notification_disabled">Notifiche disabilitate</string>
     <string name="settingscreen_newarea_notification_enabled">Notifiche abilitate</string>
