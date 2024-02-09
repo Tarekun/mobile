@@ -1,6 +1,5 @@
 package com.example.mobile.composables
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,8 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -29,6 +26,7 @@ enum class AlertSeverity {
     INFO, SUCCESS, WARNING, ERROR
 }
 
+//TODO: remove severity support
 fun getColorForSeverity(severity: AlertSeverity) {
     when (severity) {
         AlertSeverity.INFO -> Color.Blue

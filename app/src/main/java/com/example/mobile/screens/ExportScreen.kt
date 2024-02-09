@@ -161,7 +161,6 @@ fun ExportScreen(
         withContext(Dispatchers.IO) {
             enableProximityShare = SettingsUtils.storedSettings.enableProximityShare
         }
-//        notifyUser("ENDPOINTID")
     }
     LaunchedEffect(enableProximityShare) {
         withContext(Dispatchers.IO) {
@@ -217,7 +216,7 @@ fun ExportScreen(
                 enableProximityShare = !enableProximityShare
             },
             value = enableProximityShare,
-            contentDescription = "Control proximity share functionality",
+            contentDescription = context.getString(R.string.exportscreen_proximity_description),
             modifier = spacing,
         )
     }

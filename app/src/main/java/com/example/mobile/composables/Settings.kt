@@ -1,10 +1,7 @@
 package com.example.mobile.composables
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -22,12 +19,10 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,6 +51,7 @@ fun SettingLayout(
     description: String = "",
     inputField: @Composable() () -> Unit
 ) {
+    val context = LocalContext.current
     var showDialog: Boolean by remember { mutableStateOf(false) }
 
     Column(
@@ -81,7 +76,7 @@ fun SettingLayout(
                     }) {
                         Icon(
                             imageVector = Icons.Default.Info,
-                            contentDescription = "Setting explanation"
+                            contentDescription = context.getString(R.string.setting_info_button)
                         )
                     }
                 }
@@ -178,6 +173,7 @@ fun NumberSetting(
     max: Int = Int.MAX_VALUE,
     min: Int = Int.MIN_VALUE
 ) {
+    val context = LocalContext.current
     SettingLayout(
         title = title,
         description = description,
@@ -208,7 +204,10 @@ fun NumberSetting(
                                 .size(48.dp)
                                 .padding(8.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "Decrease")
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = context.getString(R.string.number_setting_decrease)
+                            )
                         }
                     },
                     trailingIcon = {
@@ -222,7 +221,10 @@ fun NumberSetting(
                                 .size(48.dp)
                                 .padding(8.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "Increase")
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowUp,
+                                contentDescription = context.getString(R.string.number_setting_increase)
+                            )
                         }
                     },
                     modifier = Modifier

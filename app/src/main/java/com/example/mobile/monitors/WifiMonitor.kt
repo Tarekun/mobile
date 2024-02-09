@@ -17,7 +17,7 @@ class WifiMonitor(
     // importante che sia proprio l'applicationContext e non un Context derivato per release <=
     // Build.VERSION_CODES.N, tanto vale usare sempre questo di default se non ci causa problemi
     // reference: https://developer.android.com/reference/android/net/wifi/WifiManager
-    applicationContext: Context
+    private val applicationContext: Context
 ): Monitor(applicationContext) {
     private val wifiManager =
         applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -33,32 +33,20 @@ class WifiMonitor(
     }
 
     private fun requestSettingEnabled(title: String, message: String, intent: Intent) {
-        //TODO: check if a custom UI dialog would be better (example at the end of the function body)
         val builder = AlertDialog.Builder(activity)
 
         builder.setTitle(title)
         builder.setMessage(message)
-        builder.setPositiveButton("Ok") { dialog, _ ->
+        builder.setPositiveButton(applicationContext.getString(R.string.ok)) { dialog, _ ->
             activity.startActivity(intent)
             dialog.dismiss()
         }
-        builder.setNegativeButton("Cancel") { dialog, _ ->
+        builder.setNegativeButton(applicationContext.getString(R.string.cancel)) { dialog, _ ->
             dialog.dismiss()
         }
 
         val dialog = builder.create()
         dialog.show()
-
-//        val dialog = Dialog(this)
-//        dialog.setContentView(R.layout.custom_dialog_layout)
-//        dialog.setContent(ComposableContent(?))
-//        val enableButton = dialog.findViewById<Button>(R.id.enableButton)
-//        enableButton.setOnClickListener {
-//            val wifiIntent = Intent(Settings.ACTION_WIFI_SETTINGS)
-//            startActivity(wifiIntent)
-//            dialog.dismiss()
-//        }
-//        dialog.show()
     }
 
     @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
@@ -98,7 +86,7 @@ class WifiMonitor(
         //should work like this: use currently connected one, if not available scan everything
         val scanResults: List<ScanResult> = wifiManager.scanResults
         if (scanResults.isEmpty()) {
-            return 0.0
+            return Double.NEGATIVE_INFINITY
         } else {
             // Calculate average signal strength in dBm
             val totalSignalStrength = scanResults.sumBy { it.level }

@@ -1,7 +1,5 @@
 package com.example.mobile.composables
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -23,6 +21,7 @@ enum class ButtonVariant {
     TEXT
 }
 
+//TODO remove file
 @Composable
 fun ParametrizedButton(
     variant: ButtonVariant,

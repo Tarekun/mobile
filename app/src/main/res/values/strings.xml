@@ -1,12 +1,11 @@
 <resources>
-    <!--  <string name=""></string>  -->
     <string name="app_name">mobile</string>
     <string name="file_provider_authority">com.your.package.name.file.provider</string>
 
     <string name="enable_wifi_dialog_title">Enable Wifi connection</string>
     <string name="enable_wifi_dialog_content">In order to monitor the strength of wifi connections in your area you need to turn on wifi connectivity</string>
     <string name="enable_location_dialog_title">Enable location</string>
-    <string name="enable_location_dialog_content">In order to monitor the strength of wifi connections Android also requires to turn on the location.\nThis is because if you monitor the available wifi connection you could get a good approximation of where the device is located. This does not mean that the application will check the device\'s location.</string>
+    <string name="enable_location_dialog_content">In order to monitor the strength of wifi connections Android also requires to turn on the location.\nThis is because if you monitor the available wifi connection you could get a good approximation of where the device is located.</string>
     <string name="settings_alert_note">Note that monitor specific settings will only be applied to the selected monitor</string>
     <string name="period_setting_title">Time monitoring interval</string>
     <string name="period_setting_desc">This setting controls how frequently a measurement is taken for the monitor. The unit is in minutes</string>
@@ -24,6 +23,7 @@
     <string name="exportscreen_import_button">Import measurements from dump</string>
     <string name="exportscreen_proximity_disabled">Enable proximity share</string>
     <string name="exportscreen_proximity_enabled">Disable proximity share</string>
+    <string name="exportscreen_proximity_description">Control proximity share functionality</string>
     <string name="notification_title_endpoint_found">Connect to share data</string>
     <string name="notification_content_endpoint_found">A device you can share your measurements with was found with endpoint id:</string>
     <string name="notification_title_new_area">Unexplored area!</string>
@@ -50,6 +50,27 @@
     <string name="settingscreen_notification_frequency_oad">Once a day</string>
     <string name="settingscreen_notification_frequency_oaw">Once a week</string>
     <string name="settings_collapsable_description">open collapsable menu and show content</string>
-
+    <string name="infobox_selected_monitor">Selected monitor:</string>
+    <string name="infobox_status">Status:</string>
+    <string name="infobox_recorded_value">Recorded value:</string>
+    <string name="infobox_monitoring_period">Monitoring period:</string>
+    <string name="infobox_counted_measurements">Counted measurements:</string>
+    <string name="infobox_local_measurements">Local measurements:</string>
+    <string name="infobox_imported_measurements">Imported measurements:</string>
+    <string name="infobox_status_active">Active</string>
+    <string name="infobox_status_paused">Paused</string>
+    <string name="dbfs_unit">dBFS</string>
+    <string name="dbm_unit">dBm</string>
+    <string name="setting_info_button">Open setting info dialog</string>
+    <string name="number_setting_increase">Increase</string>
+    <string name="number_setting_decrease">Decrease</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings_button_description">Go to settings</string>
+    <string name="select_monitor">Select monitor</string>
+    <string name="monitoring_screen_start">Start monitoring</string>
+    <string name="monitoring_screen_stop">Stop monitoring</string>
+    <string name="proximityscreen_start_sharing">Start connection to share database dumps with</string>
 
 </resources>
+<!--  <string name=""></string>  -->

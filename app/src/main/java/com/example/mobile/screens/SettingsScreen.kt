@@ -95,6 +95,7 @@ fun SettingsScreen(
             content = LocalContext.current.getString(R.string.settings_alert_note)
         )
 
+        //TODO: cambiare l'unità di misura
         NumberSetting(
             title = context.getString(R.string.period_setting_title),
             description = context.getString(R.string.period_setting_desc),
