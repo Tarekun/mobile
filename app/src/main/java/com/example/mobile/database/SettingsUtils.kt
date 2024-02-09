@@ -46,7 +46,7 @@ enum class SettingsNames {
     NOTIFY_ONLY_ALL_MONITORS,
     NOTIFY_ONLY_ABOVE_LENGTH,
     NOTIFICATION_PERIOD,
-    LAST_NOTIFICATION
+    LAST_NOTIFICATION,
     INCLUDE_EXTERNAL
 }
 
@@ -86,6 +86,7 @@ object SettingsUtils {
             "notifyOnlyAboveLength" to SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name,
             "notificationPeriodMs" to SettingsNames.NOTIFICATION_PERIOD.name,
             "lastNotification" to SettingsNames.LAST_NOTIFICATION.name,
+            "includeExternal" to SettingsNames.INCLUDE_EXTERNAL.name,
         )
         var result = nameConversionTable[property.name] ?: throw IllegalArgumentException("Property name ${property.name} is not mapped to any setting")
 

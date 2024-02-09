@@ -75,6 +75,7 @@
     <string name="settingscreen_external_enabled">External included</string>
     <string name="settingscreen_external_disabled">External not included</string>
     <string name="settingscreen_external_description">Choose to include or not external measurements</string>
+    <string name="open_map">Open map</string>
 
 </resources>
 <!--  <string name=""></string>  -->

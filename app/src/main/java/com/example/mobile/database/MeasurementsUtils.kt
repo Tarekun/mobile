@@ -189,6 +189,8 @@ object MeasurementsUtils {
 
     fun isNewAreaForMonitor(top: Double, bottom: Double, left: Double, right: Double, variant: MonitorVariant): Boolean {
         return DbManager.measurementDao.isNewArea(top, bottom, left, right, variant)
+    }
+
     fun getAllMeasurementsPerMonitorContainedIn(variant: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement> {
         return DbManager.measurementDao.getAllMeasurementsPerMonitorContainedIn(variant, maxNumber, top, bottom, left, right)
     }

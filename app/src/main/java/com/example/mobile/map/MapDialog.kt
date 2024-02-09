@@ -22,7 +22,7 @@ import com.google.android.gms.maps.MapView
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.mobile.commons.LocationManager
+import com.example.mobile.misc.LocationManager
 import com.example.mobile.database.Measurement
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.MonitorSettings
