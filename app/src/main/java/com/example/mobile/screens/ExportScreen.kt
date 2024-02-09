@@ -9,10 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,11 +23,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.mobile.R
+import com.example.mobile.composables.SettingLayout
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
-import com.example.mobile.commons.NotificationHelper
+import com.example.mobile.misc.NotificationHelper
 import com.example.mobile.composables.SwitchSetting
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -187,22 +184,30 @@ fun ExportScreen(
         modifier = Modifier
             .fillMaxSize(),
     ) {
-        OutlinedButton(
-            onClick = {
-                importDump()
-            },
-            modifier = spacing
-        ) {
-            Text(text = context.getString(R.string.exportscreen_import_button))
-        }
-        OutlinedButton(
-            onClick = {
-                export()
-            },
-            modifier = spacing
-        ) {
-            Text(text = context.getString(R.string.exportscreen_export_button))
-        }
+        SettingLayout(
+            inputField = {
+                OutlinedButton(
+                    onClick = {
+                        importDump()
+                    },
+//                    modifier = spacing
+                ) {
+                    Text(text = context.getString(R.string.exportscreen_import_button))
+                }
+            }
+        )
+        SettingLayout(
+            inputField = {
+                OutlinedButton(
+                    onClick = {
+                        export()
+                    },
+//                    modifier = spacing
+                ) {
+                    Text(text = context.getString(R.string.exportscreen_export_button))
+                }
+            }
+        )
         SwitchSetting(
             label = context.getString(
                 if (enableProximityShare) R.string.exportscreen_proximity_enabled

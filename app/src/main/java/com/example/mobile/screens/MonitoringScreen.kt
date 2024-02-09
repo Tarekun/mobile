@@ -34,7 +34,7 @@ import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
-import com.example.mobile.commons.LocationManager
+import com.example.mobile.misc.LocationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

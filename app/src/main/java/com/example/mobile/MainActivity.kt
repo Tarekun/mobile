@@ -1,7 +1,6 @@
 package com.example.mobile
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -19,8 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.work.OneTimeWorkRequest
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.mobile.composables.OptionSelect
@@ -29,9 +26,9 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
-import com.example.mobile.commons.LocationManager
-import com.example.mobile.commons.NewAreaWorker
-import com.example.mobile.commons.NotificationHelper
+import com.example.mobile.misc.LocationManager
+import com.example.mobile.misc.NewAreaWorker
+import com.example.mobile.misc.NotificationHelper
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.NavigationHistory
