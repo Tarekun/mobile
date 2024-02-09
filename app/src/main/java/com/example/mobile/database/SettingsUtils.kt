@@ -47,6 +47,7 @@ enum class SettingsNames {
     NOTIFY_ONLY_ABOVE_LENGTH,
     NOTIFICATION_PERIOD,
     LAST_NOTIFICATION
+    INCLUDE_EXTERNAL
 }
 
 data class MonitorSettings(
@@ -125,7 +126,8 @@ object SettingsUtils {
             notifyOnlyAllMonitors = (map[SettingsNames.NOTIFY_ONLY_ALL_MONITORS.name] ?: "").toBoolean(),
             notifyOnlyAboveLength = (map[SettingsNames.NOTIFY_ONLY_ABOVE_LENGTH.name] ?: "").toInt(),
             notificationPeriodMs = (map[SettingsNames.NOTIFICATION_PERIOD.name] ?: "").toLong(),
-            lastNotification = (Instant.parse(map[SettingsNames.LAST_NOTIFICATION.name] ?: ""))
+            lastNotification = (Instant.parse(map[SettingsNames.LAST_NOTIFICATION.name] ?: "")),
+            includeExternal = (map[SettingsNames.INCLUDE_EXTERNAL.name] ?: "").toBoolean(),
         )
     }
 

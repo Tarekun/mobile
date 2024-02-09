@@ -176,6 +176,19 @@ fun SettingsScreen(
             value = settings!!.notifyInNewArea,
             contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
         )
+        SwitchSetting(
+            title = context.getString(R.string.settingscreen_external_title),
+            label = if(settings!!.includeExternal) {
+                context.getString(R.string.settingscreen_external_enabled)
+            } else {
+                context.getString(R.string.settingscreen_external_disabled)
+            },
+            onClick = {
+                settings = settings!!.copy(includeExternal = !settings!!.includeExternal)
+            },
+            value = settings!!.includeExternal,
+            contentDescription = context.getString(R.string.settingscreen_external_description)
+        )
 
         CollapsableSettings(
             label = context.getString(R.string.settingscreen_collapse_notification_title),

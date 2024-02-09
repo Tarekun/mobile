@@ -71,6 +71,10 @@
     <string name="monitoring_screen_start">Start monitoring</string>
     <string name="monitoring_screen_stop">Stop monitoring</string>
     <string name="proximityscreen_start_sharing">Start connection to share database dumps with</string>
+    <string name="settingscreen_external_title">Include external measurements in the map</string>
+    <string name="settingscreen_external_enabled">External included</string>
+    <string name="settingscreen_external_disabled">External not included</string>
+    <string name="settingscreen_external_description">Choose to include or not external measurements</string>
 
 </resources>
 <!--  <string name=""></string>  -->
