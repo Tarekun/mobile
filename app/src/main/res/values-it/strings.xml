@@ -1,0 +1,73 @@
+<resources>
+
+    <string name="enable_wifi_dialog_title">Attiva la connessione WiFi</string>
+    <string name="enable_wifi_dialog_content">Per monitorare la connessione WiFi, devi attivare la connessione WiFi</string>
+    <string name="enable_location_dialog_title">Attiva la posizione</string>
+    <string name="enable_location_dialog_content">Per monitorare la connesisione WiFi, Android richiede anche di attivare la poszione.\nQuesto perché dalle connessioni WiFi si può ottenere una buona stima della posizione del dispositivo.</string>
+    <string name="settings_alert_note">Nota: le impostazioni specifiche ad un monitor saranno applicate solo al monitor attualmente selezionato</string>
+    <string name="period_setting_title">Intervallo di monitoraggio</string>
+    <string name="period_setting_desc">Quest\'impostazione contralla la frequenza con cui si fanno i monitoraggi. L\'unità è in minuti</string>
+    <string name="measurement_setting_title">Numero di misurazione da contare</string>
+    <string name="measurement_setting_desc">Quest\'impostazione controlla quante misurazioni sono usate per creare la griglia della mappa</string>
+    <string name="grid_setting_title">Lunghezza di un\'unità della griglia</string>
+    <string name="grid_setting_desc">Quest\'impostazione controlla quanto lungo dev\'essere il lato di un quadrato della griglia. L\'unità è in metri</string>
+    <string name="settingscreen_export_button_description">Altro...</string>
+    <string name="settingscreen_export_button">Vai alle impostazioni di import/export</string>
+    <string name="settingscreen_newarea_notification_title">Notifica in aree senza misurazioni</string>
+    <string name="settingscreen_newarea_notification_disabled">Notifiche disabilitate</string>
+    <string name="settingscreen_newarea_notification_enabled">Notifiche abilitate</string>
+    <string name="settingscreen_newarea_notification_description">Quest\'impostazione attiva/disattiva le notifiche</string>
+    <string name="exportscreen_export_button">Esporta le misurazioni locali</string>
+    <string name="exportscreen_import_button">Importa le misurazioni da un dump</string>
+    <string name="exportscreen_proximity_disabled">Attiva il proximity share</string>
+    <string name="exportscreen_proximity_enabled">Disattiva il proximity share</string>
+    <string name="exportscreen_proximity_description">Controlla la funzionalità di proximity share</string>
+    <string name="notification_title_endpoint_found">Connettiti per scambiare dati</string>
+    <string name="notification_content_endpoint_found">Un dispositivo con cui puoi scambiare dati è stato trovato, con endpoint id:</string>
+    <string name="notification_title_new_area">Area inesplorata!</string>
+    <string name="notification_content_new_area">Non hai mai fatto misurazioni nell\'area in cui sei. Apri l\'app e comincia a monitorare</string>
+    <string name="permission_failed_dialog_title">Permesso negato</string>
+    <string name="cancel_button_text">Annulla</string>
+    <string name="permission_failed_dialog_content">
+        Il monitor non può lavorare senza il permesso. Ogni monitor ha bisogno di accedere alla posizione
+        precisa per sapere dove vengono fatte le misurazioni. Inoltre, monitor specifici possono necessitare
+        di permessi specifici, come:
+        \n- Il monitor audio deve accedere al microfono del telefono per calcolare il rumore
+        \n- Il monitor LTE deve accedere alla rete del telefono per testare la connettività della SIM
+    </string>
+    <string name="settingscreen_collapse_notification_title">Altre impostazioni delle notifiche...</string>
+    <string name="settingscreen_all_monitors_title">Solo per tutti i monitor</string>
+    <string name="settingscreen_all_monitors_description">Quando quest\'impostazione è abilitata sarai notificato solo in caso ti trovi in un\'area nuova per tutti i monitor</string>
+    <string name="settingscreen_all_monitors_enabled">Tutti i monitor</string>
+    <string name="settingscreen_all_monitors_disabled">Se è nuova per qualunque monitor</string>
+    <string name="settingscreen_notification_area_title">Notifica solo in aree di lato</string>
+    <string name="settingscreen_notification_frequency_title">Notifica al più</string>
+    <string name="settingscreen_notification_frequency_description">Controlla quanto di frequente puoi ricevere notifiche</string>
+    <string name="settingscreen_notification_frequency_always">Appena entri in una nuova area</string>
+    <string name="settingscreen_notification_frequency_tad">Due volte al giorno</string>
+    <string name="settingscreen_notification_frequency_oad">Una volta al giorno</string>
+    <string name="settingscreen_notification_frequency_oaw">Una volta alla settimana</string>
+    <string name="settings_collapsable_description">Apri la sezione richiudibile e mostra il contenuto</string>
+    <string name="infobox_selected_monitor">Monitor selezionato:</string>
+    <string name="infobox_status">Stato:</string>
+    <string name="infobox_recorded_value">Valore registrato:</string>
+    <string name="infobox_monitoring_period">Periodo di monitoraggio:</string>
+    <string name="infobox_counted_measurements">Misurazioni contate:</string>
+    <string name="infobox_local_measurements">Misurazioni locali:</string>
+    <string name="infobox_imported_measurements">Misurazioni importate:</string>
+    <string name="infobox_status_active">Attivo</string>
+    <string name="infobox_status_paused">In pausa</string>
+    <string name="dbfs_unit">dBFS</string>
+    <string name="dbm_unit">dBm</string>
+    <string name="setting_info_button">Apri la finestra di info riguardo l\'impostazione</string>
+    <string name="number_setting_increase">Aumenta</string>
+    <string name="number_setting_decrease">Riduci</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Annulla</string>
+    <string name="settings_button_description">Vai alle impostazioni</string>
+    <string name="select_monitor">Seleziona monitor</string>
+    <string name="monitoring_screen_start">Inizia a monitorare</string>
+    <string name="monitoring_screen_stop">Interrompi il monitoraggio</string>
+    <string name="proximityscreen_start_sharing">Connettiti per condividere il database con:</string>
+
+</resources>
