@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import android.content.pm.PackageManager
+import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,9 +34,16 @@ import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
 import com.example.mobile.monitors.MapMonitor.CurrentState.currentLocation
 import com.example.mobile.monitors.MonitorVariant
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,7 +67,7 @@ fun LegendItem(name: String, color: Color) {
 }
 
 @Composable
-fun LegendView(gridUnitLength: Int, modifier: Modifier = Modifier) {
+fun LegendView(gridUnitLength: Int,inUseMonitor: MonitorVariant, modifier: Modifier = Modifier) {
     val Orange = Color(0xFFFFA500) // ARGB per Arancione
     val Purple = Color(0xFF800080) // ARGB per Viola
     Column(
@@ -78,61 +86,84 @@ fun LegendView(gridUnitLength: Int, modifier: Modifier = Modifier) {
         LegendItem("Invalido", Color.Black)
 
         Text("Dimensione delle celle: $gridUnitLength metri", fontSize = 8.sp)
+        Text("Monitor in uso: $inUseMonitor", fontSize = 8.sp)
     }
 }
 @Composable
-fun MapActivity (mapMonitor: MapMonitor){
+fun MapActivity (mapMonitor: MapMonitor,inUseMonitor: MonitorVariant){
     val context = LocalContext.current
     val gridUnitLengthState = remember { mutableIntStateOf(0) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    var sharedGrid  by remember {mutableStateOf<Map<String, List<Pair<Double, Double>>>?>(null)}
-    val monitor
+    val sharedGrid = remember { mutableStateOf<Map<String, List<Pair<Double, Double>>>?>(null) }
+    var isMapCentered = remember { mutableStateOf(false) }
+    val lastZoomLevel = remember { mutableStateOf(0f) }
+    val lastBounds = remember { mutableStateOf(LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))) }
+    val readyToMonitor = remember { mutableStateOf(false) }
+    val googleMapState = remember { mutableStateOf<GoogleMap?>(null) } // Memorizza lo stato di GoogleMap
 
 
-    // Funzione per aggiornare la posizione attuale
-    fun updateCurrentLocation() {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            currentLocation = location?.let { LatLng(it.latitude, it.longitude) }
-        }.addOnFailureListener {
-            // Gestione dell'errore, ad esempio impostando una posizione predefinita
-            currentLocation = LatLng(0.0, 0.0) // Posizione predefinita
-        }
-    }
 
-    // Launcher per la richiesta del permesso di localizzazione
     val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         hasLocationPermission = isGranted
         if (isGranted) {
-            // Ottieni la posizione attuale solo se il permesso è stato concesso
-            updateCurrentLocation()
+            // Richiedi gli aggiornamenti sulla posizione qui
         }
     }
 
-    LaunchedEffect(key1 = Unit) {
-        // Controlla se i permessi sono già stati concessi
-        hasLocationPermission = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasLocationPermission) {
-            // Ottieni la posizione attuale
-            updateCurrentLocation()
-        } else {
-            // Richiedi il permesso di localizzazione
-            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+    val locationCallback = remember {
+        object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult.locations.lastOrNull()?.let {
+                    currentLocation = LatLng(it.latitude, it.longitude)
+                }
+            }
         }
+    }
 
-        // Carica le impostazioni dall'IO
+    LaunchedEffect(key1 = true) {
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                hasLocationPermission = true
+                val locationRequest = LocationRequest.create().apply {
+                    interval = 10000
+                    fastestInterval = 5000
+                    priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                }
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                ).addOnFailureListener {
+                    // Gestisci eventuali errori qui
+                }
+            }
+            else -> {
+                locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+        // Carica le impostazioni
         val settings = withContext(Dispatchers.IO) {
             SettingsUtils.getStoredSettings()
         }
-        // Aggiorna lo stato sul thread principale
         gridUnitLengthState.value = settings.gridUnitLength
+    }
+
+    LaunchedEffect(key1 = inUseMonitor) {
+        // Codice da eseguire quando inUseMonitor cambia
+        println("Monitor in uso cambiato in: $inUseMonitor")
+        isMapCentered.value = false
+
+    }
+
+// Assicurati di rimuovere gli aggiornamenti sulla posizione quando il composable non è più attivo
+    DisposableEffect(key1 = true) {
+        onDispose {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        }
     }
 
     if (hasLocationPermission && currentLocation != null ) {
@@ -146,41 +177,40 @@ fun MapActivity (mapMonitor: MapMonitor){
                             onResume()
                             getMapAsync { googleMap ->
                                 Log.d("MapActivity", "Map is ready")
-
-                                // Ottieni la posizione corrente da un gestore di localizzazione o una fonte affidabile
+                                googleMapState.value = googleMap // Memorizza il riferimento a googleMap nello stato
 
                                 val gridUnit = gridUnitLengthState.value
-                                Log.d("MapActivity", "gridUnit:$gridUnit")
 
-                                // Imposta il livello di zoom iniziale e sposta la camera sulla posizione corrente
-                                val initialZoomLevel = 14f // Scegli un livello di zoom iniziale adeguato
-                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, initialZoomLevel))
-
-                                // Inizializza lastZoomLevel con il livello di zoom iniziale
-                                var lastZoomLevel = initialZoomLevel
-                                Log.d("MapActivity", "zoom:$lastZoomLevel")
-
+                                // Centra la mappa solo se non è già stata centrata e se currentLatLng non è null
+                                if (!isMapCentered.value && currentLatLng != null) {
+                                    val initialZoomLevel = if (gridUnit == 10) 17f else 14f
+                                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, initialZoomLevel))
+                                    isMapCentered.value = true
+                                }
                                 googleMap.setOnCameraIdleListener {
-                                    // Questo listener viene chiamato dopo che la camera ha finito di muoversi e lo zoom è stato applicato
-                                    val lastZoomLevel = googleMap.cameraPosition.zoom
-                                    val mapBounds = googleMap.projection.visibleRegion.latLngBounds
-                                    Log.d("MapActivity", "Zoom after moveCamera: $lastZoomLevel")
-                                    Log.d("MapActivity", "Bounds after zoom: $mapBounds")
+                                    val currentZoomLevel = googleMap.cameraPosition.zoom
+                                    val currentBounds = googleMap.projection.visibleRegion.latLngBounds
 
-                                    // Genera la griglia basata sui bounds attuali
-                                    val grid = mapMonitor.generateGrid(mapBounds, gridUnit)
-                                    sharedGrid = grid
-                                    mapMonitor.applyGridToMap(grid,googleMap, currentLatLng)
+                                    if (currentZoomLevel != lastZoomLevel.value || currentBounds != lastBounds.value) {
+                                        // Condizione aggiunta per evitare la rigenerazione delle griglie su spostamenti minori
+                                        if (currentBounds != lastBounds.value || currentZoomLevel != lastZoomLevel.value) {
+                                            val grid = mapMonitor.generateGrid(currentBounds, gridUnit)
+                                            sharedGrid.value = grid
+                                            readyToMonitor.value = true // Segnala che è pronto per monitorLocation
+
+                                            Log.d("setonc", "grid = $grid" )
+                                            Log.d("setonc", "sharedGrid = $sharedGrid" )
+
+                                            mapMonitor.applyGridToMap(grid, googleMap, currentLatLng)
+                                            lastZoomLevel.value = currentZoomLevel
+                                            lastBounds.value = currentBounds
+                                        }
+                                    }
                                 }
 
-                                mapMonitor.monitorLocation(
-                                    context = context,
-                                    map = googleMap,
-                                    grid = sharedGrid ?: emptyMap()
-                                ) {
-                                    mapMonitor.colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell)
 
-                                }
+
+
                             }
 
                         } catch (e: Exception) {
@@ -193,7 +223,21 @@ fun MapActivity (mapMonitor: MapMonitor){
                 },
                 modifier = Modifier.fillMaxSize() // Ensure the map takes up the full size of the composable
             )
-            LegendView(gridUnitLengthState.value, modifier = Modifier
+            LaunchedEffect(readyToMonitor.value) {
+                if (readyToMonitor.value) {
+                    sharedGrid.value?.let { grid ->
+
+                        mapMonitor.monitorLocation(
+                            map = googleMapState.value!!,
+                            grid = sharedGrid.value!!,
+                            fusedLocationClient = fusedLocationClient,
+                            currentLatLng = currentLatLng
+                        )
+                        readyToMonitor.value = false // Resetta lo stato se necessario
+                    }
+                }
+            }
+            LegendView(gridUnitLengthState.value,inUseMonitor, modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 8.dp, end = 8.dp))
 

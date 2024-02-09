@@ -5,11 +5,17 @@ import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Looper
 import android.util.Log
 import com.example.mobile.database.Classification
 import com.example.mobile.database.DbManager
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MapMonitor.CurrentState.currentGridCell
+import com.example.mobile.monitors.MapMonitor.CurrentState.oldCell
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
@@ -26,93 +32,26 @@ import kotlin.math.cos
 
 class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
 
-//    private val dbManager = DbManager(context)
     val cellPolygons = mutableMapOf<String, Polygon>()
 
-
-    // Generate the grid
-
     object CurrentState {
-        var locationReceivedCalled: Boolean = false
         @Volatile
         var currentGridCell: String? = null
         var currentLocation: Location? = null
         var currentLocationMarker: Marker? = null
         var gridSystem: Map<String, List<Pair<Double, Double>>> = mapOf()
+        var oldCell: String? = null
     }
-
-    /*fun generateGrid(
-        currentLat: Double,
-        currentLon: Double,
-        numCellsPerSide: Int,
-        gridUnit: Int // Dimensione della cella in metri
-    ): Map<String, List<Pair<Double, Double>>> {
-        val grid = mutableMapOf<String, List<Pair<Double, Double>>>()
-
-        val metersPerDegree = 111000.0 // approssimativamente 111 km per grado
-        val stepLat = gridUnit.toDouble() / metersPerDegree
-        val stepLon = stepLat / cos(currentLat * (Math.PI / 180))
-
-        // Sposta l'inizio di mezza cella a sinistra e mezza cella in su
-        val startLat = currentLat - (numCellsPerSide / 2) * stepLat + (stepLat / 2)
-        val startLon = currentLon - (numCellsPerSide / 2) * stepLon + (stepLon / 2)
-
-        var cellLat = startLat
-        var cellId = 0
-        for (i in 0 until numCellsPerSide) {
-            var cellLon = startLon
-            for (j in 0 until numCellsPerSide) {
-                val square = listOf(
-                    Pair(cellLat, cellLon),
-                    Pair(cellLat + stepLat, cellLon),
-                    Pair(cellLat + stepLat, cellLon + stepLon),
-                    Pair(cellLat, cellLon + stepLon),
-                    Pair(cellLat, cellLon) // Close the polygon
-                )
-                val cellName = "cell_${cellId++}"
-                grid[cellName] = square
-                cellLon += stepLon
-            }
-            cellLat += stepLat
-        }
-        CurrentState.gridSystem = grid
-        return grid
-    }*/
-
-
-
-
-
-    /*private fun addGridToMap(grid: Map<String, List<Pair<Double, Double>>>, map: GoogleMap) {
-        try {
-            Log.d("MapUtils", "inside addGridToMap" )
-            for ((cellName, square) in grid) {
-                val polygonOptions = PolygonOptions().apply {
-                    for (coord in square) {
-                        add(LatLng(coord.first, coord.second))
-                    }
-                    strokeColor(Color.RED)
-                    //fillColor(Color.argb(50, 255, 0, 0))
-                }
-                val polygon = map.addPolygon(polygonOptions)
-                cellPolygons[cellName] = polygon // Memorizza il riferimento al poligono
-            }
-            colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell)
-
-        } catch (e: Exception) {
-            Log.e("MapUtils", "Error adding grid to map", e)
-        }
-    }
-*/
-
-
-
 
     fun findCurrentGridCell(
         currentLat: Double,
         currentLon: Double,
         grid: Map<String, List<Pair<Double, Double>>>
+
     ): String? {
+        Log.d("findc", "currentLat = $currentLat" )
+        Log.d("findc", "currentLon = $currentLon" )
+        Log.d("findc", "grid = $grid" )
         grid.forEach { (cellName, cellCoordinates) ->
             val bottomLeft = cellCoordinates[0]  // cellCoordinates[0] è il punto in basso a sinistra
             val topRight = cellCoordinates[2]    // cellCoordinates[2] è il punto in alto a destra
@@ -127,49 +66,75 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
 
 
     fun monitorLocation(
-        context: Context,
         map: GoogleMap,
         grid: Map<String, List<Pair<Double, Double>>>,
-        onLocationReceived: () -> Unit,
+        fusedLocationClient: FusedLocationProviderClient,
+        currentLatLng: LatLng,
     ) {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        val locationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                val newCell = findCurrentGridCell(location.latitude, location.longitude, grid)
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                if (locationResult.locations.isNotEmpty()) {
+                    //Log.d("monitorLOc", "sharedGrid = $grid" )
 
-                if (newCell != currentGridCell) {
-                    currentGridCell = newCell
+                    val location = locationResult.locations.last()
+                    val newLatLng = LatLng(location.latitude, location.longitude)
+                    val newCell = findCurrentGridCell(currentLatLng.latitude, currentLatLng.longitude, grid)
+                    Log.d("findcurr", "newCell = $newCell" )
+
+                    if (newCell != currentGridCell && newCell!= null) {
+                        Log.d("ATTIVAAAAAA", "ATTIVAAAAAA" )
+
+                        oldCell = currentGridCell
+
+                        Log.d("gridchange", "oldGridCell = $currentGridCell" )
+                        Log.d("gridchange", "newCell = $newCell" )
+
+                        currentGridCell = newCell
+                        colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell, oldCell)
+                        updateLocation(location, map)
+                    }
+                    // Aggiorna la posizione del marker senza recentrare la mappa
+                    CurrentState.currentLocationMarker?.let {
+                        it.position = newLatLng
+                    } ?: run {
+                        CurrentState.currentLocationMarker = map.addMarker(MarkerOptions().position(newLatLng).title("Qui sono io!"))
+                    }
+
                 }
-                updateLocation(location ,map)
-                onLocationReceived()
             }
         }
+
+
+        val locationRequest = LocationRequest.create().apply {
+            interval = 5000L
+            fastestInterval = 2500L
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
         try {
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                5000L,
-                50f,
-                locationListener
-            )
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
         } catch (ex: SecurityException) {
-            Log.e("MapActivity", "Security Exception: ${ex.message}",ex)
+            Log.e("MapActivity", "Security Exception: ${ex.message}", ex)
         }
     }
+
+
 
     fun updateLocation(location: Location, map: GoogleMap) {
         val newLatLng = LatLng(location.latitude, location.longitude)
         CurrentState.currentLocationMarker?.position = newLatLng
-        map.animateCamera(CameraUpdateFactory.newLatLng(newLatLng))
 
         CurrentState.currentLocation = location
     }
 
-    fun colorCurrentGrid(monitorType: MonitorVariant, currentGrid: String?) {
+    fun colorCurrentGrid(monitorType: MonitorVariant, currentGrid: String?, oldCell: String?) {
         coroutineScope.launch {
             val lastSignalStrengthList = withContext(Dispatchers.IO) {
                 DbManager.lastSignalStrength(currentGrid, monitorType)
             }
+            //Log.d("ATTIVATAAAAAAAA", "ATTIVATAAAAAAAA" )
+
             val averageSignalStrength = calculateAverage(lastSignalStrengthList)
             val classification = classifySignalStrength((averageSignalStrength))
             //Log.d("MapUtils", "classification = $classification" )
@@ -188,9 +153,17 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
             }
 
             withContext(Dispatchers.Main) {
-                // Aggiorna il colore della griglia corrente
+                //oldCell?.let { prevGridName ->
+                    //Log.d("coloroldcell", "olfcell = ${CurrentState.oldCell}" )
+
+                   // cellPolygons[prevGridName]?.fillColor = Color.argb(0, 0, 0, 0) // Viola
+                //}?: Log.e("vecchia", "Poligono non trovato per la griglia: $oldCell")
                 currentGrid?.let { gridName ->
-                    cellPolygons[gridName]?.fillColor = color
+                    //Log.d("coloroldcell", "newcell = $currentGrid" )
+
+                    cellPolygons[gridName]?.let { polygon ->
+                        polygon.fillColor = color
+                    } ?: Log.e("nuova", "Poligono non trovato per la griglia: $gridName")
                 }
             }
         }
@@ -263,11 +236,12 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         googleMap: GoogleMap,
         currentLocation:  LatLng
     ) {
-        // Pulisci la mappa da vecchie griglie
-        googleMap.clear()
+
+         // Rimuovi solo i poligoni delle griglie precedenti
+         cellPolygons.values.forEach { it.remove() }
+         cellPolygons.clear() // Pulisci la mappa dei poligoni per le future aggiunte
         val newCell = findCurrentGridCell(currentLocation.latitude, currentLocation.longitude, grid)
         currentGridCell = newCell
-        googleMap.addMarker(MarkerOptions().position(currentLocation).title("Qui sono io!"))
 
         // Aggiungi le celle della griglia sulla mappa
         grid.forEach { (cellName, square) ->
@@ -283,7 +257,9 @@ class MapMonitor(context: Context, private val coroutineScope: CoroutineScope) {
         }
 
         // Colora la cella corrente (se applicabile)
-        colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell )
+         Log.d("gengrid", "olfcell = $oldCell" )
+
+         colorCurrentGrid(MonitorVariant.AUDIO, currentGridCell, oldCell )
 
         // Altre operazioni di styling o aggiunte sulla mappa
     }

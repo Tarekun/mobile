@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                     ) {
                         if (inUseMonitor == MonitorVariant.MAP) {
-                            MapActivity(mapMonitor)
+                            MapActivity(mapMonitor, inUseMonitor)
                         }
                         else when (currentScreen) {
                             Screens.MONITORING ->
@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
                                     endpointId = endpointId
                                 )
                             Screens.MAP ->
-                                MapActivity(mapMonitor)
+                                MapActivity(mapMonitor,inUseMonitor)
                         }
                     }
                 }
