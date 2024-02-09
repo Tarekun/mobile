@@ -14,7 +14,7 @@ class LteMonitor(
 ): Monitor(context) {
     private val telephonyManager: TelephonyManager =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-    private var signalDbm: Double = 0.0
+    private var signalDbm: Double = Double.NEGATIVE_INFINITY
     private var signalStrengthListener: PhoneStateListener? = null
     private var telephonyCallback: TelephonyCallback? = null
 

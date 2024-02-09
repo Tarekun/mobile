@@ -1,6 +1,5 @@
 package com.example.mobile.database
 
-import android.text.BoringLayout
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert

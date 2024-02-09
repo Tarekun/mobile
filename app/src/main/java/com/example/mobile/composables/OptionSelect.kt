@@ -1,7 +1,6 @@
 package com.example.mobile.composables
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
@@ -10,7 +9,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,7 +26,6 @@ fun <T> OptionSelect(
     buttonModifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedOption = value
 
     Column() {
         OutlinedButton(
@@ -36,7 +33,7 @@ fun <T> OptionSelect(
             modifier = buttonModifier
         ) {
             Text(
-                label + if(selectedOption != null) " (${getLabel(selectedOption)})" else ""
+                label + if (value != null) " (${getLabel(value)})" else ""
             )
             Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
         }
@@ -48,7 +45,6 @@ fun <T> OptionSelect(
             options.forEach { option ->
                 DropdownMenuItem(
                     onClick = {
-//                        selectedOption = option
                         expanded = false
                         onChange(option)
                     },

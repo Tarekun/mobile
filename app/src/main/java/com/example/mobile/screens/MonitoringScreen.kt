@@ -174,12 +174,6 @@ fun MonitoringScreen(
             )
         }
         Row() {
-            Button(
-                onClick = { showMap = !showMap },
-            ) {
-                Text(text = "${if (showMap) "Hide" else "Show"} map")
-            }
-            Spacer(modifier = Modifier.width(16.dp))
             Button(onClick = {
                 when (monitor.currentStatus) {
                     MonitorState.CREATED -> checkPermissionsAndStartMonitoring()
@@ -190,7 +184,17 @@ fun MonitoringScreen(
                     }
                 }
             }) {
-                Text(text = "${if (monitor.currentStatus != MonitorState.STARTED) "Start" else "Stop"} monitoring")
+                Text(
+                    text =
+                    if (monitor.currentStatus != MonitorState.STARTED) context.getString(R.string.monitoring_screen_start)
+                    else context.getString(R.string.monitoring_screen_stop)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = { showMap = !showMap },
+            ) {
+                Text(text = "${if (showMap) "Hide" else "Show"} map")
             }
         }
     }

@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                             },
                             actions = {
                                 OptionSelect(
-                                    label = "Select Monitor",
+                                    label = applicationContext.getString(R.string.select_monitor),
                                     options = monitors,
                                     value = inUseMonitor,
                                     onChange = { inUseMonitor = it },
@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                         imageVector =
                                             if(currentScreen == Screens.MONITORING) Icons.Filled.Settings
                                             else Icons.Filled.ArrowBack,
-                                        contentDescription = "Go to settings"
+                                        contentDescription = applicationContext.getString(R.string.settings_button_description)
                                     )
                                 }
                             }
