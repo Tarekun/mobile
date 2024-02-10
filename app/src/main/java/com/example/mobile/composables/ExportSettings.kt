@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import java.io.File.createTempFile
 
 const val dumpMimeType: String = "application/json"
 const val serviceId: String = "proximityShare"
+const val serviceName: String = "proximityShareService"
 val strategy = Strategy.P2P_POINT_TO_POINT
 
 @Composable
@@ -114,7 +116,6 @@ fun ExportSettings(
     }
     val sendConnectionCallback = makeSendConnectionCallback(context)
 
-    //TODO: change the failureListener to proper handling
     fun startAdvertising() {
         val advertisingOptions: AdvertisingOptions = AdvertisingOptions
             .Builder()
@@ -123,16 +124,18 @@ fun ExportSettings(
 
         Nearby.getConnectionsClient(context)
             .startAdvertising(
-                // TODO: make this some kind of username?
-                "local name",
+                serviceName,
                 serviceId,
                 sendConnectionCallback,
                 advertisingOptions
             ).addOnFailureListener {
-                Log.d("mio", "fallimento advertising: ${it.message}")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.proximity_share_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
-    //TODO: change the failureListener to proper handling
     fun startDiscovery() {
         val discoveryOptions: DiscoveryOptions = DiscoveryOptions
             .Builder()
@@ -145,7 +148,11 @@ fun ExportSettings(
                 discoveryCallback,
                 discoveryOptions
             ).addOnFailureListener {
-                Log.d("mio", "fallimento discovery")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.proximity_share_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
     fun stopAdvertising() {

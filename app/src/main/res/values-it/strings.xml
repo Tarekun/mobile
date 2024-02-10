@@ -73,5 +73,6 @@
     <string name="settingscreen_external_disabled">Non incluse</string>
     <string name="settingscreen_external_description">Scegli se includere o no le misurazioni esterne</string>
     <string name="open_map">Mostra mappa</string>
+    <string name="proximity_share_error">C\'è stato un problema nell\'avvio del proximity share</string>
 
 </resources>
