@@ -24,7 +24,9 @@ class LocationTracker(private val activity: Activity) {
         .build()
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
     private val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private val callbacks: MutableList<(latitude: Double, longitude: Double) -> Unit> = mutableListOf()
     private var locationCallback: LocationCallback
+
     // lateinit so these can't be read before calling startLocationRecording
     private var _latitude by Delegates.notNull<Double>()
     private var _longitude by Delegates.notNull<Double>()
@@ -48,6 +50,10 @@ class LocationTracker(private val activity: Activity) {
 
                     _latitude = bestLocation.latitude
                     _longitude = bestLocation.longitude
+
+                    for (callback in callbacks) {
+                        callback(latitude, longitude)
+                    }
                 }
             }
         }
@@ -85,4 +91,7 @@ class LocationTracker(private val activity: Activity) {
             ) != PackageManager.PERMISSION_GRANTED
     }
 
+    fun subscribeLocationUpdate(callback: (latitude: Double, longitude: Double) -> Unit) {
+        callbacks.add(callback)
+    }
 }

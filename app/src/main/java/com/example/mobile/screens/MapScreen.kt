@@ -44,8 +44,12 @@ fun MapScreen(
     fun initMap(googleMap: GoogleMap) {
         val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
         //TODO: gestire questo marker
-        googleMap.addMarker(MarkerOptions().position(initialLatLng))
+        val marker = googleMap.addMarker(MarkerOptions().position(initialLatLng))
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initialLatLng, 20f))
+
+        locationTracker!!.subscribeLocationUpdate { latitude, longitude ->
+            marker?.position = LatLng(latitude, longitude)
+        }
 
         initializing = false
     }
