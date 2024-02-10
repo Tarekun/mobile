@@ -17,16 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.mobile.R
-import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
 import com.example.mobile.composables.CollapsableSettings
 import com.example.mobile.composables.ExportSettings
 import com.example.mobile.composables.NumberSetting
 import com.example.mobile.composables.OptionsSetting
-import com.example.mobile.composables.SettingLayout
 import com.example.mobile.composables.SwitchSetting
 import com.example.mobile.database.MonitorSettings
-import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
@@ -94,7 +91,6 @@ fun SettingsScreen(
         modifier = Modifier.verticalScroll(scrollState)
     ) {
         AlertTextbox(
-            severity = AlertSeverity.INFO,
             content = LocalContext.current.getString(R.string.settings_alert_note)
         )
 

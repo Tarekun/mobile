@@ -22,23 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-enum class AlertSeverity {
-    INFO, SUCCESS, WARNING, ERROR
-}
-
-//TODO: remove severity support
-fun getColorForSeverity(severity: AlertSeverity) {
-    when (severity) {
-        AlertSeverity.INFO -> Color.Blue
-        AlertSeverity.SUCCESS -> Color.Green
-        AlertSeverity.WARNING -> Color.Yellow
-        AlertSeverity.ERROR -> Color.Red
-    }
-}
-
 @Composable
 fun AlertTextbox(
-    severity: AlertSeverity,
     title: String = "",
     content: String
 ) {
@@ -46,7 +31,6 @@ fun AlertTextbox(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-//            .background(getColorForSeverity(severity))
             .clip(MaterialTheme.shapes.small)
     ) {
         Row(
