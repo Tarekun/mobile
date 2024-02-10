@@ -41,8 +41,6 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    //TODO: properly initialize
-    val notificationFrequencies = listOf<Long>(0, 1000*60*60*12, 1000*60*60*24, 1000*60*60*24*7)
 
     var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
@@ -93,28 +91,28 @@ fun SettingsScreen(
             content = LocalContext.current.getString(R.string.settings_alert_note)
         )
 
-        //TODO: cambiare l'unità di misura
         NumberSetting(
             title = context.getString(R.string.period_setting_title),
             description = context.getString(R.string.period_setting_desc),
-            value = monitorSettings?.monitorPeriod ?: 0,
+            value = (monitorSettings?.monitorPeriod ?: 0) / 1000,
             onChange = {
+                val newPeriodMs = 1000 * it
                 when(variant) {
                     MonitorVariant.AUDIO -> settings = settings!!.copy(
                         audio = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.audio.measurementNumber,
                         )
                     )
                     MonitorVariant.WIFI -> settings = settings!!.copy(
                         wifi = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.wifi.measurementNumber,
                         )
                     )
                     MonitorVariant.LTE -> settings = settings!!.copy(
                         lte = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.lte.measurementNumber,
                         )
                     )
@@ -159,7 +157,8 @@ fun SettingsScreen(
                     gridUnitLength = it
                 )
             },
-            options = SettingsUtils.gridSizes
+            options = SettingsUtils.gridSizes,
+            getLabel = { "$it m" }
         )
         SwitchSetting(
             title = context.getString(R.string.settingscreen_external_title),
@@ -230,21 +229,17 @@ fun SettingsScreen(
                             )
                         },
                         // no cooldown, half a day, a day, a week
-                        options = notificationFrequencies,
+                        options = SettingsUtils.notificationFrequencies,
                         getLabel = {
                             when (it) {
-                                notificationFrequencies[0] ->
+                                SettingsUtils.notificationFrequencies[0] ->
                                     context.getString(R.string.settingscreen_notification_frequency_always)
-
-                                notificationFrequencies[1] ->
+                                SettingsUtils.notificationFrequencies[1] ->
                                     context.getString(R.string.settingscreen_notification_frequency_tad)
-
-                                notificationFrequencies[2] ->
+                                SettingsUtils.notificationFrequencies[2] ->
                                     context.getString(R.string.settingscreen_notification_frequency_oad)
-
-                                notificationFrequencies[3] ->
+                                SettingsUtils.notificationFrequencies[3] ->
                                     context.getString(R.string.settingscreen_notification_frequency_oaw)
-
                                 else ->
                                     it.toString()
                             }

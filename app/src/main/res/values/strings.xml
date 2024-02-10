@@ -7,7 +7,7 @@
     <string name="enable_location_dialog_title">Enable location</string>
     <string name="enable_location_dialog_content">In order to monitor the strength of wifi connections Android also requires to turn on the location.\nThis is because if you monitor the available wifi connection you could get a good approximation of where the device is located.</string>
     <string name="settings_alert_note">Note that monitor specific settings will only be applied to the selected monitor</string>
-    <string name="period_setting_title">Time monitoring interval</string>
+    <string name="period_setting_title">Time monitoring interval [s]</string>
     <string name="period_setting_desc">This setting controls how frequently a measurement is taken for the monitor. The unit is in minutes</string>
     <string name="measurement_setting_title">Number of measurements to count</string>
     <string name="measurement_setting_desc">This setting controls how many of the last measurements are counted per area on the grid, when evaluating measurements on the map</string>
