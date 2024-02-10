@@ -70,6 +70,7 @@ data class SettingsTable(
 )
 
 object SettingsUtils {
+    public val gridSizes = listOf(10, 100, 1000)
 
     private fun getSettingNameOrThrow(
         property: KProperty1<SettingsTable, *>,

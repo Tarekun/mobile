@@ -6,6 +6,8 @@ import androidx.work.WorkerParameters
 import com.example.mobile.R
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.SettingsUtils
+import com.example.mobile.map.moveLatitude
+import com.example.mobile.map.moveLongitude
 import com.example.mobile.monitors.MonitorVariant
 import kotlinx.datetime.Clock
 import kotlin.time.Duration
@@ -36,12 +38,18 @@ class NewAreaWorker(
                 }
 
                 // define the area with the proper size
-                //TODO: define conversion int[m] -> double[lat/long coordinate]
-                val convertedLength: Double = settings.notifyOnlyAboveLength.toDouble()
-                val top = currentLatitude + convertedLength
-                val bottom = currentLatitude - convertedLength
-                val right = currentLongitude + convertedLength
-                val left = currentLongitude - convertedLength
+                val top = moveLatitude(currentLatitude, settings.notifyOnlyAboveLength.toDouble())
+                val bottom = moveLatitude(currentLatitude, -settings.notifyOnlyAboveLength.toDouble())
+                val right = moveLongitude(
+                    currentLongitude,
+                    settings.notifyOnlyAboveLength.toDouble(),
+                    currentLatitude
+                )
+                val left = moveLongitude(
+                    currentLongitude,
+                    -settings.notifyOnlyAboveLength.toDouble(),
+                    currentLatitude
+                )
 
                 return if (settings.notifyOnlyAllMonitors) {
                     MeasurementsUtils.isNewAreaForMonitor(

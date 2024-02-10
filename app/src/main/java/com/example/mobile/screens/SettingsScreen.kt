@@ -42,7 +42,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     //TODO: properly initialize
-    val gridSizes = listOf(10, 100, 1000)
     val notificationFrequencies = listOf<Long>(0, 1000*60*60*12, 1000*60*60*24, 1000*60*60*24*7)
 
     var settings: SettingsTable? by remember { mutableStateOf(null) }
@@ -160,7 +159,7 @@ fun SettingsScreen(
                     gridUnitLength = it
                 )
             },
-            options = gridSizes
+            options = SettingsUtils.gridSizes
         )
         SwitchSetting(
             title = context.getString(R.string.settingscreen_external_title),
@@ -217,7 +216,7 @@ fun SettingsScreen(
                                 notifyOnlyAboveLength = it
                             )
                         },
-                        options = gridSizes,
+                        options = SettingsUtils.gridSizes,
                         getLabel = { "$it m" }
                     )
 
