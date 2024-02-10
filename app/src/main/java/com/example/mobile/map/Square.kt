@@ -32,6 +32,8 @@ class Square(
         get() = LatLng(bottom, left)
     val bottomRight: LatLng
         get() = LatLng(bottom, right)
+    val center: LatLng
+        get() = bounds.center
 
     private fun computeAverageClassification(): Classification {
         if (classifications.isEmpty()) return Classification.INVALID

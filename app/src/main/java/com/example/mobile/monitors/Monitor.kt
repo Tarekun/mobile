@@ -108,7 +108,6 @@ abstract class Monitor(
                     longitude,
                 )
                 MeasurementsUtils.storeMeasurement(measurement)
-                Log.d("mio", "${classification.name}")
 
                 measurement
             }

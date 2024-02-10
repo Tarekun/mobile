@@ -1,5 +1,6 @@
 package com.example.mobile.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,6 +41,7 @@ fun MapScreen(
     var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
     var locationTracker: LocationTracker? by remember { mutableStateOf(null) }
+    var firstRender: Boolean by remember { mutableStateOf(true) }
 
     fun initMap(googleMap: GoogleMap) {
         val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
@@ -55,37 +57,43 @@ fun MapScreen(
 
     fun renderMap(googleMap: GoogleMap) {
         val visibleRegion = googleMap.projection.visibleRegion.latLngBounds
-        coroutineScope.launch {
-            withContext(Dispatchers.IO) {
-                val measurements = MeasurementsUtils.getAllMeasurementsPerMonitorContainedIn(
-                    variant = variant,
-                    maxNumber = monitorSettings!!.measurementNumber,
-                    top = visibleRegion.northeast.latitude,
-                    bottom = visibleRegion.southwest.latitude,
-                    left = visibleRegion.southwest.longitude,
-                    right = visibleRegion.northeast.longitude
-                ).toMutableList()
-                if (settings!!.includeExternal) {
-                    measurements += MeasurementsUtils.getAllExternalMeasurementsPerMonitorContainedIn(
+        val shouldRerender = ! (grid?.isAreaCovered(visibleRegion) ?: false)
+        // only render and count measurements if it's the first render or
+        // the map has been moved and the grid doesn't fully cover it anymore
+        if (shouldRerender || firstRender) {
+            firstRender = false
+            coroutineScope.launch {
+                withContext(Dispatchers.IO) {
+                    val measurements = MeasurementsUtils.getAllMeasurementsPerMonitorContainedIn(
                         variant = variant,
                         maxNumber = monitorSettings!!.measurementNumber,
                         top = visibleRegion.northeast.latitude,
                         bottom = visibleRegion.southwest.latitude,
                         left = visibleRegion.southwest.longitude,
                         right = visibleRegion.northeast.longitude
-                    )
-                }
-
-                // clear previous grid if not visible anymore to improve map's performance
-                if (!grid!!.isPointCovered(visibleRegion.center)) {
-                    withContext(Dispatchers.Main) {
-                        grid!!.clearGrid()
-                        grid = MapGrid(visibleRegion.center, settings!!.gridUnitLength.toDouble())
+                    ).toMutableList()
+                    if (settings!!.includeExternal) {
+                        measurements += MeasurementsUtils.getAllExternalMeasurementsPerMonitorContainedIn(
+                            variant = variant,
+                            maxNumber = monitorSettings!!.measurementNumber,
+                            top = visibleRegion.northeast.latitude,
+                            bottom = visibleRegion.southwest.latitude,
+                            left = visibleRegion.southwest.longitude,
+                            right = visibleRegion.northeast.longitude
+                        )
                     }
-                }
-                grid!!.makeGrid(visibleRegion, measurements)
-                withContext(Dispatchers.Main) {
-                    grid!!.drawGrid(googleMap)
+
+                    // clear previous grid if not visible anymore to improve map's performance
+                    if (!grid!!.isPointCovered(visibleRegion.center)) {
+                        withContext(Dispatchers.Main) {
+                            grid!!.clearGrid()
+                            grid = MapGrid(visibleRegion.center, settings!!.gridUnitLength.toDouble())
+                        }
+                    }
+                    grid!!.makeGrid(visibleRegion, measurements)
+                    withContext(Dispatchers.Main) {
+                        grid!!.drawGrid(googleMap)
+                    }
                 }
             }
         }
