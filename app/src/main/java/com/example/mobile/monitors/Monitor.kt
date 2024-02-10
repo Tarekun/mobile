@@ -1,10 +1,10 @@
 package com.example.mobile.monitors
 
 import android.content.Context
+import android.util.Log
 import com.example.mobile.database.Classification
 import com.example.mobile.database.Measurement
 import com.example.mobile.database.MeasurementsUtils
-import com.example.mobile.misc.LocationManager
 import java.lang.IllegalStateException
 
 enum class MonitorVariant {
@@ -22,7 +22,7 @@ interface IMonitor {
     fun startMonitoring(onStart: () -> Unit)
     fun stopMonitoring()
     fun reset()
-    fun makeMeasurement(): Measurement
+    fun makeMeasurement(latitude: Double, longitude: Double): Measurement
     fun classifySignalStrength(dB: Double): Classification
 }
 
@@ -94,7 +94,7 @@ abstract class Monitor(
         )
     }
 
-    override fun makeMeasurement(): Measurement {
+    override fun makeMeasurement(latitude: Double, longitude: Double): Measurement {
         return checkStateOrFail(
             MonitorState.STARTED,
             {
@@ -104,10 +104,11 @@ abstract class Monitor(
                     value,
                     classification,
                     variant,
-                    LocationManager.latitude,
-                    LocationManager.longitude,
+                    latitude,
+                    longitude,
                 )
                 MeasurementsUtils.storeMeasurement(measurement)
+                Log.d("mio", "${classification.name}")
 
                 measurement
             }

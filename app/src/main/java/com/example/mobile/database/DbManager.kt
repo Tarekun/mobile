@@ -31,11 +31,11 @@ private class Converters {
     @TypeConverter
     fun intToClassification(classificationValue: Int): Classification {
         return when(classificationValue) {
-            0 -> Classification.MAX
-            1 -> Classification.HIGH
+            4 -> Classification.MAX
+            3 -> Classification.HIGH
             2 -> Classification.MEDIUM
-            3 -> Classification.LOW
-            4 -> Classification.MIN
+            1 -> Classification.LOW
+            0 -> Classification.MIN
             else -> Classification.INVALID
         }
     }

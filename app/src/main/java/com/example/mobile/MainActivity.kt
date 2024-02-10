@@ -26,10 +26,9 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
-import com.example.mobile.misc.LocationManager
 import com.example.mobile.misc.NewAreaWorker
 import com.example.mobile.misc.NotificationHelper
-import com.example.mobile.map.MapScreen
+import com.example.mobile.screens.MapScreen
 import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.Screens
 import com.example.mobile.screens.MonitoringScreen
@@ -55,7 +54,6 @@ class MainActivity : ComponentActivity() {
     private fun initializeSingletons() {
         DbManager.init(applicationContext)
         NotificationHelper.init(applicationContext)
-        LocationManager.init(this)
 
         newAreaWorker = PeriodicWorkRequest.Builder(
             NewAreaWorker::class.java,
@@ -173,7 +171,10 @@ class MainActivity : ComponentActivity() {
                                     endpointId = endpointId
                                 )
                             Screens.MAP_SCREEN ->
-                                MapScreen(variant = inUseMonitor)
+                                MapScreen(
+                                    variant = inUseMonitor,
+                                    mainActivity = this@MainActivity
+                                )
                         }
                     }
                 }

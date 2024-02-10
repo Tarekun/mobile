@@ -34,8 +34,8 @@ import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.Monitor
 import com.example.mobile.monitors.MonitorState
 import com.example.mobile.monitors.MonitorVariant
-import com.example.mobile.misc.LocationManager
 import com.example.mobile.database.SettingsTable
+import com.example.mobile.misc.LocationTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -64,6 +64,7 @@ fun MonitoringScreen(
     var initializing by remember { mutableStateOf(true) }
     var measurementsNumber: Int by remember { mutableStateOf(0) }
     var externalMeasurementsNumber: Int by remember { mutableStateOf(0) }
+    var locationTracker: LocationTracker? by remember { mutableStateOf(null) }
 
     LaunchedEffect(monitor.variant) {
         withContext(Dispatchers.IO) {
@@ -75,6 +76,7 @@ fun MonitoringScreen(
             }
 
             measurementsNumber = MeasurementsUtils.countLocalMeasurements(monitor.variant)
+            locationTracker = LocationTracker(context)
             externalMeasurementsNumber = MeasurementsUtils.countExternalMeasurements(monitor.variant)
             initializing = false
         }
@@ -83,12 +85,12 @@ fun MonitoringScreen(
 
     @RequiresPermission(value = "android.permission.ACCESS_FINE_LOCATION")
     fun startMonitoring() {
-        LocationManager.startLocationRecording()
+        locationTracker!!.startLocationRecording()
         value = 0.0
         monitor.startMonitoring {
             monitoringJob = CoroutineScope(Dispatchers.IO).launch {
                 while(true) {
-                    value = monitor.makeMeasurement().signalStrength
+                    value = monitor.makeMeasurement(locationTracker!!.latitude, locationTracker!!.longitude).signalStrength
                     measurementsNumber++
                     delay(monitorSettings!!.monitorPeriod)
                 }
@@ -100,7 +102,7 @@ fun MonitoringScreen(
         monitoringJob?.cancel()
         monitor.stopMonitoring()
         value = 0.0
-        LocationManager.stopLocationRecording()
+        locationTracker!!.stopLocationRecording()
     }
 
 
@@ -197,7 +199,7 @@ fun MonitoringScreen(
             Button(
                 onClick = { navigateTo(Screens.MAP_SCREEN) },
             ) {
-                Text(text = "Open map")
+                Text(text = context.getString(R.string.open_map))
             }
         }
     }
