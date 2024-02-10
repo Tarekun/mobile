@@ -29,11 +29,12 @@ import com.example.mobile.monitors.WifiMonitor
 import com.example.mobile.misc.LocationManager
 import com.example.mobile.misc.NewAreaWorker
 import com.example.mobile.misc.NotificationHelper
+import com.example.mobile.map.MapScreen
+import com.example.mobile.screens.NavigationHistory
+import com.example.mobile.screens.Screens
 import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
-import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.ProximityShareScreen
-import com.example.mobile.screens.Screens
 import com.example.mobile.screens.SettingsScreen
 import com.example.mobile.ui.theme.MobileTheme
 import java.util.concurrent.TimeUnit
@@ -157,7 +158,8 @@ class MainActivity : ComponentActivity() {
                                         MonitorVariant.AUDIO -> audioMonitor
                                         MonitorVariant.WIFI -> wifiMonitor
                                         MonitorVariant.LTE -> lteMonitor
-                                    }
+                                    },
+                                    navigateTo = { navigateTo(it) }
                                 )
                             Screens.SETTINGS ->
                                 SettingsScreen(
@@ -175,6 +177,8 @@ class MainActivity : ComponentActivity() {
                                 ProximityShareScreen(
                                     endpointId = endpointId
                                 )
+                            Screens.MAP_SCREEN ->
+                                MapScreen(variant = inUseMonitor)
                         }
                     }
                 }

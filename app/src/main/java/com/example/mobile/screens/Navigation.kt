@@ -6,7 +6,8 @@ enum class Screens {
     MONITORING,
     SETTINGS,
     EXPORT,
-    PROXIMITY_SHARE
+    PROXIMITY_SHARE,
+    MAP_SCREEN,
 }
 
 class NavigationHistory(currentScreen: Screens) {

@@ -69,5 +69,10 @@
     <string name="monitoring_screen_start">Inizia a monitorare</string>
     <string name="monitoring_screen_stop">Interrompi il monitoraggio</string>
     <string name="proximityscreen_start_sharing">Connettiti per condividere il database con:</string>
+    <string name="settingscreen_external_title">Includi misurazioni esterne nella mappa</string>
+    <string name="settingscreen_external_enabled">Incluse</string>
+    <string name="settingscreen_external_disabled">Non incluse</string>
+    <string name="settingscreen_external_description">Scegli se includere o no le misurazioni esterne</string>
+    <string name="open_map">Mostra mappa</string>
 
 </resources>

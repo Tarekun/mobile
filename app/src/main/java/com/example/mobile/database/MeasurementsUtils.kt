@@ -26,6 +26,7 @@ data class Measurement(
     val timestamp: Instant,
     val latitude: Double,
     val longitude: Double,
+    val grid : String? = null,
 )
 
 @Dao
@@ -55,6 +56,15 @@ interface MeasurementDao {
            "WHERE monitor = :monitor AND " +
            "      latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right)")
     fun isNewArea(top: Double, bottom: Double, left: Double, right: Double, monitor: MonitorVariant): Boolean
+    
+    @Query("SELECT signalStrength FROM measurement WHERE grid = :gridName AND monitor = :monitorType ORDER BY timestamp DESC LIMIT 5")
+    fun lastSignalStrength(gridName: String?, monitorType: MonitorVariant): List<Double>
+
+    @Query("SELECT * FROM measurement " +
+            "WHERE monitor = :monitor AND " +
+            "      latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right " +
+            "LIMIT :maxNumber")
+    fun getAllMeasurementsPerMonitorContainedIn(monitor: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement>
 }
 
 @Entity(tableName = "external_measurement")
@@ -87,6 +97,12 @@ interface ExternalMeasurementDao {
 
     @Query("SELECT COUNT(*) FROM external_measurement WHERE monitor = :monitor")
     fun countExternalMeasurementsPerMonitor(monitor: MonitorVariant): Int
+
+    @Query("SELECT * FROM external_measurement " +
+            "WHERE monitor = :monitor AND " +
+            "      latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right " +
+            "LIMIT :maxNumber")
+    fun getAllMeasurementsPerMonitorContainedIn(monitor: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement>
 }
 
 enum class Classification(val intValue: Int) {
@@ -95,7 +111,8 @@ enum class Classification(val intValue: Int) {
     MEDIUM(2),
     LOW(1),
     MIN(0),
-    INVALID(-1)
+    INVALID(-1),
+    NO_DATA(-2) // Assegnato un valore negativo per indicare "NO_DATA"
 }
 
 object MeasurementsUtils {
@@ -172,5 +189,13 @@ object MeasurementsUtils {
 
     fun isNewAreaForMonitor(top: Double, bottom: Double, left: Double, right: Double, variant: MonitorVariant): Boolean {
         return DbManager.measurementDao.isNewArea(top, bottom, left, right, variant)
+    }
+
+    fun getAllMeasurementsPerMonitorContainedIn(variant: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement> {
+        return DbManager.measurementDao.getAllMeasurementsPerMonitorContainedIn(variant, maxNumber, top, bottom, left, right)
+    }
+
+    fun getAllExternalMeasurementsPerMonitorContainedIn(variant: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement> {
+        return DbManager.externalMeasurementDao.getAllMeasurementsPerMonitorContainedIn(variant, maxNumber, top, bottom, left, right)
     }
 }

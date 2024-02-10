@@ -20,8 +20,8 @@ object LocationManager {
     private lateinit var locationCallback: LocationCallback
 
     //TODO: find sync system so that these values can't be read before they are properly initializeds
-    private var _latitude: Double = 0.0
-    private var _longitude: Double = 0.0
+    private var _latitude: Double = 44.503
+    private var _longitude: Double = 11.329
     val latitude: Double
         get() = _latitude
     val longitude: Double
