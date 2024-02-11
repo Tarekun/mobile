@@ -26,13 +26,11 @@ import com.example.mobile.monitors.AudioMonitor
 import com.example.mobile.monitors.LteMonitor
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.monitors.WifiMonitor
-import com.example.mobile.misc.LocationManager
 import com.example.mobile.misc.NewAreaWorker
 import com.example.mobile.misc.NotificationHelper
-import com.example.mobile.map.MapScreen
+import com.example.mobile.screens.MapScreen
 import com.example.mobile.screens.NavigationHistory
 import com.example.mobile.screens.Screens
-import com.example.mobile.screens.ExportScreen
 import com.example.mobile.screens.MonitoringScreen
 import com.example.mobile.screens.ProximityShareScreen
 import com.example.mobile.screens.SettingsScreen
@@ -56,7 +54,6 @@ class MainActivity : ComponentActivity() {
     private fun initializeSingletons() {
         DbManager.init(applicationContext)
         NotificationHelper.init(applicationContext)
-        LocationManager.init(this)
 
         newAreaWorker = PeriodicWorkRequest.Builder(
             NewAreaWorker::class.java,
@@ -166,11 +163,7 @@ class MainActivity : ComponentActivity() {
                                     variant = inUseMonitor,
                                     navigateTo = { navigateTo(it) },
                                     startNotifyingInNewArea = {startNotifyingInNewArea()},
-                                    stopNotifying = {stopNotifying()}
-                                )
-                            Screens.EXPORT ->
-                                ExportScreen(
-                                    variant = inUseMonitor,
+                                    stopNotifying = {stopNotifying()},
                                     startIntent = { this@MainActivity.startActivity(it) },
                                 )
                             Screens.PROXIMITY_SHARE ->
@@ -178,7 +171,10 @@ class MainActivity : ComponentActivity() {
                                     endpointId = endpointId
                                 )
                             Screens.MAP_SCREEN ->
-                                MapScreen(variant = inUseMonitor)
+                                MapScreen(
+                                    variant = inUseMonitor,
+                                    mainActivity = this@MainActivity
+                                )
                         }
                     }
                 }

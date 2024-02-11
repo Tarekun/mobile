@@ -26,7 +26,6 @@ class LteMonitor(
     private fun computeDbm(signalStrength: SignalStrength?): Double {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val cellInfos = signalStrength?.cellSignalStrengths ?: emptyList()
-            //TODO: make sure this average ever makes sense
             return if (cellInfos.isNotEmpty())
                 cellInfos.sumOf{ it.dbm } / cellInfos.size.toDouble()
             else noSignalDbm

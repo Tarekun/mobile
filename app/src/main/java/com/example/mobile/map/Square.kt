@@ -7,8 +7,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Polygon
 import com.google.android.gms.maps.model.PolygonOptions
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 data class SquareIndex(val x: Int, val y: Int)
 
@@ -33,10 +32,25 @@ class Square(
         get() = LatLng(bottom, left)
     val bottomRight: LatLng
         get() = LatLng(bottom, right)
+    val center: LatLng
+        get() = bounds.center
 
     private fun computeAverageClassification(): Classification {
-        //TODO:
-        return if (classifications.isEmpty()) Classification.INVALID else classifications[0]
+        if (classifications.isEmpty()) return Classification.INVALID
+
+        var sum = 0
+        for (classification in classifications) {
+            sum += classification.intValue
+        }
+        val average = sum.toDouble() / classifications.size
+        return when(average.roundToInt()) {
+            4 -> Classification.MAX
+            3 -> Classification.HIGH
+            2 -> Classification.MEDIUM
+            1 -> Classification.LOW
+            0 -> Classification.MIN
+            else -> Classification.INVALID
+        }
     }
 
     private fun createOptions(): PolygonOptions {
@@ -49,11 +63,11 @@ class Square(
             add(topLeft)
             strokeWidth(3f)
 
-            //TODO: better handle of alpha
             val backgroundColor = when (computeAverageClassification()) {
                 Classification.MIN -> Color.CYAN
                 Classification.LOW -> Color.GREEN
-                Classification.MEDIUM -> Color.BLACK
+                // orange color
+                Classification.MEDIUM -> Color.rgb(255, 165, 0)
                 Classification.HIGH -> Color.YELLOW
                 Classification.MAX -> Color.RED
                 else -> null

@@ -3,6 +3,7 @@ package com.example.mobile.screens
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.mobile.R
+import com.example.mobile.composables.serviceName
 import com.example.mobile.database.MeasurementsUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -57,7 +59,7 @@ fun makePayloadCallback(context: Context): PayloadCallback {
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
             if (update.status == PayloadTransferUpdate.Status.SUCCESS) {
-                //transfer successful??
+
             }
         }
     }
@@ -91,15 +93,18 @@ fun ProximityShareScreen(
     val context = LocalContext.current
     val spacing = Modifier.padding(bottom = 16.dp)
 
-    //TODO: change the failureListener to proper handling
     fun requestConnection() {
         Nearby.getConnectionsClient(context)
             .requestConnection(
-                "local name",
+                serviceName,
                 endpointId,
                 makeSendConnectionCallback(context)
             ).addOnFailureListener {
-                Log.d("mio", "fallimento request connection")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.proximity_share_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 

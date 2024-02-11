@@ -5,14 +5,13 @@
     <string name="enable_location_dialog_title">Attiva la posizione</string>
     <string name="enable_location_dialog_content">Per monitorare la connesisione WiFi, Android richiede anche di attivare la poszione.\nQuesto perché dalle connessioni WiFi si può ottenere una buona stima della posizione del dispositivo.</string>
     <string name="settings_alert_note">Nota: le impostazioni specifiche ad un monitor saranno applicate solo al monitor attualmente selezionato</string>
-    <string name="period_setting_title">Intervallo di monitoraggio</string>
+    <string name="period_setting_title">Intervallo di monitoraggio [s]</string>
     <string name="period_setting_desc">Quest\'impostazione contralla la frequenza con cui si fanno i monitoraggi. L\'unità è in minuti</string>
-    <string name="measurement_setting_title">Numero di misurazione da contare</string>
+    <string name="measurement_setting_title">Numero di misurazioni da contare</string>
     <string name="measurement_setting_desc">Quest\'impostazione controlla quante misurazioni sono usate per creare la griglia della mappa</string>
     <string name="grid_setting_title">Lunghezza di un\'unità della griglia</string>
     <string name="grid_setting_desc">Quest\'impostazione controlla quanto lungo dev\'essere il lato di un quadrato della griglia. L\'unità è in metri</string>
-    <string name="settingscreen_export_button_description">Altro...</string>
-    <string name="settingscreen_export_button">Vai alle impostazioni di import/export</string>
+    <string name="settingscreen_export_menu">Impostazioni di import/export</string>
     <string name="settingscreen_newarea_notification_title">Notifica in aree senza misurazioni</string>
     <string name="settingscreen_newarea_notification_disabled">Notifiche disabilitate</string>
     <string name="settingscreen_newarea_notification_enabled">Notifiche abilitate</string>
@@ -74,5 +73,6 @@
     <string name="settingscreen_external_disabled">Non incluse</string>
     <string name="settingscreen_external_description">Scegli se includere o no le misurazioni esterne</string>
     <string name="open_map">Mostra mappa</string>
+    <string name="proximity_share_error">C\'è stato un problema nell\'avvio del proximity share</string>
 
 </resources>

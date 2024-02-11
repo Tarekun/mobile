@@ -70,6 +70,9 @@ data class SettingsTable(
 )
 
 object SettingsUtils {
+    public val gridSizes = listOf(10, 100, 1000)
+    // instantaneous, twice a day, once a day, once a week
+    public val notificationFrequencies = listOf<Long>(0, 1000*60*60*12, 1000*60*60*24, 1000*60*60*24*7)
 
     private fun getSettingNameOrThrow(
         property: KProperty1<SettingsTable, *>,

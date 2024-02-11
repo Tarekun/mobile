@@ -1,13 +1,15 @@
-package com.example.mobile.screens
+package com.example.mobile.composables
 
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -23,13 +25,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.mobile.R
-import com.example.mobile.composables.SettingLayout
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
 import com.example.mobile.misc.NotificationHelper
-import com.example.mobile.composables.SwitchSetting
+import com.example.mobile.screens.makeSendConnectionCallback
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
@@ -45,10 +46,11 @@ import java.io.File.createTempFile
 
 const val dumpMimeType: String = "application/json"
 const val serviceId: String = "proximityShare"
+const val serviceName: String = "proximityShareService"
 val strategy = Strategy.P2P_POINT_TO_POINT
 
 @Composable
-fun ExportScreen(
+fun ExportSettings(
     variant: MonitorVariant,
     startIntent: (intent: Intent) -> Unit,
 ) {
@@ -114,7 +116,6 @@ fun ExportScreen(
     }
     val sendConnectionCallback = makeSendConnectionCallback(context)
 
-    //TODO: change the failureListener to proper handling
     fun startAdvertising() {
         val advertisingOptions: AdvertisingOptions = AdvertisingOptions
             .Builder()
@@ -123,16 +124,18 @@ fun ExportScreen(
 
         Nearby.getConnectionsClient(context)
             .startAdvertising(
-                // TODO: make this some kind of username?
-                "local name",
+                serviceName,
                 serviceId,
                 sendConnectionCallback,
                 advertisingOptions
             ).addOnFailureListener {
-                Log.d("mio", "fallimento advertising: ${it.message}")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.proximity_share_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
-    //TODO: change the failureListener to proper handling
     fun startDiscovery() {
         val discoveryOptions: DiscoveryOptions = DiscoveryOptions
             .Builder()
@@ -145,7 +148,11 @@ fun ExportScreen(
                 discoveryCallback,
                 discoveryOptions
             ).addOnFailureListener {
-                Log.d("mio", "fallimento discovery")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.proximity_share_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
     fun stopAdvertising() {
@@ -189,7 +196,8 @@ fun ExportScreen(
                     onClick = {
                         importDump()
                     },
-//                    modifier = spacing
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(text = context.getString(R.string.exportscreen_import_button))
                 }
@@ -201,7 +209,8 @@ fun ExportScreen(
                     onClick = {
                         export()
                     },
-//                    modifier = spacing
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(text = context.getString(R.string.exportscreen_export_button))
                 }

@@ -82,8 +82,6 @@ class WifiMonitor(
     // value read in dBm
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     override fun doReadValue(): Double {
-        //TODO: implement signal monitoring for both any network and only the connected one
-        //should work like this: use currently connected one, if not available scan everything
         val scanResults: List<ScanResult> = wifiManager.scanResults
         if (scanResults.isEmpty()) {
             return Double.NEGATIVE_INFINITY
@@ -97,7 +95,6 @@ class WifiMonitor(
 
     override fun classifySignalStrength(dB: Double): Classification {
         return when(dB) {
-            // in 30..50 ??
             in -45.0..0.0 -> Classification.MAX
             in -60.0..-45.0 -> Classification.HIGH
             in -70.0..-60.0 -> Classification.MEDIUM

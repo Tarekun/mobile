@@ -14,6 +14,15 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 
+enum class Classification(val intValue: Int) {
+    MAX(4),
+    HIGH(3),
+    MEDIUM(2),
+    LOW(1),
+    MIN(0),
+    INVALID(-1),
+}
+
 @Entity(tableName = "measurement")
 @Serializable
 data class Measurement(
@@ -103,16 +112,6 @@ interface ExternalMeasurementDao {
             "      latitude BETWEEN :bottom AND :top AND longitude BETWEEN :left AND :right " +
             "LIMIT :maxNumber")
     fun getAllMeasurementsPerMonitorContainedIn(monitor: MonitorVariant, maxNumber: Int, top: Double, bottom: Double, left: Double, right: Double): List<Measurement>
-}
-
-enum class Classification(val intValue: Int) {
-    MAX(4),
-    HIGH(3),
-    MEDIUM(2),
-    LOW(1),
-    MIN(0),
-    INVALID(-1),
-    NO_DATA(-2) // Assegnato un valore negativo per indicare "NO_DATA"
 }
 
 object MeasurementsUtils {

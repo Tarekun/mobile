@@ -1,18 +1,9 @@
-package com.example.mobile.map
+package com.example.mobile.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,13 +12,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.maps.MapView
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import com.example.mobile.misc.LocationManager
-import com.example.mobile.database.Measurement
+import com.example.mobile.MainActivity
 import com.example.mobile.database.MeasurementsUtils
 import com.example.mobile.database.MonitorSettings
 import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
+import com.example.mobile.map.MapGrid
+import com.example.mobile.misc.LocationTracker
 import com.example.mobile.monitors.MonitorVariant
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -42,58 +33,82 @@ import kotlinx.coroutines.withContext
 @Composable
 fun MapScreen(
     variant: MonitorVariant,
+    mainActivity: MainActivity
 ) {
     val coroutineScope = rememberCoroutineScope()
     var initializing by remember { mutableStateOf(true) }
     var grid: MapGrid? by remember { mutableStateOf(null) }
     var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
+    var locationTracker: LocationTracker? by remember { mutableStateOf(null) }
+    var firstRender: Boolean by remember { mutableStateOf(true) }
 
     fun initMap(googleMap: GoogleMap) {
-        val initialLatLng = LatLng(LocationManager.latitude, LocationManager.longitude)
-        googleMap.addMarker(MarkerOptions().position(initialLatLng))
+        val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
+        val marker = googleMap.addMarker(MarkerOptions().position(initialLatLng))
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initialLatLng, 20f))
+
+        locationTracker!!.subscribeLocationUpdate { latitude, longitude ->
+            marker?.position = LatLng(latitude, longitude)
+        }
 
         initializing = false
     }
 
     fun renderMap(googleMap: GoogleMap) {
         val visibleRegion = googleMap.projection.visibleRegion.latLngBounds
-        coroutineScope.launch {
-            withContext(Dispatchers.IO) {
-                val measurements = MeasurementsUtils.getAllMeasurementsPerMonitorContainedIn(
-                    variant = variant,
-                    maxNumber = monitorSettings!!.measurementNumber,
-                    top = visibleRegion.northeast.latitude,
-                    bottom = visibleRegion.southwest.latitude,
-                    left = visibleRegion.southwest.longitude,
-                    right = visibleRegion.northeast.longitude
-                ).toMutableList()
-                if (settings!!.includeExternal) {
-                    measurements += MeasurementsUtils.getAllExternalMeasurementsPerMonitorContainedIn(
+        val shouldRerender = ! (grid?.isAreaCovered(visibleRegion) ?: false)
+        // only render and count measurements if it's the first render or
+        // the map has been moved and the grid doesn't fully cover it anymore
+        if (shouldRerender || firstRender) {
+            firstRender = false
+            coroutineScope.launch {
+                withContext(Dispatchers.IO) {
+                    val measurements = MeasurementsUtils.getAllMeasurementsPerMonitorContainedIn(
                         variant = variant,
                         maxNumber = monitorSettings!!.measurementNumber,
                         top = visibleRegion.northeast.latitude,
                         bottom = visibleRegion.southwest.latitude,
                         left = visibleRegion.southwest.longitude,
                         right = visibleRegion.northeast.longitude
-                    )
-                }
+                    ).toMutableList()
+                    if (settings!!.includeExternal) {
+                        measurements += MeasurementsUtils.getAllExternalMeasurementsPerMonitorContainedIn(
+                            variant = variant,
+                            maxNumber = monitorSettings!!.measurementNumber,
+                            top = visibleRegion.northeast.latitude,
+                            bottom = visibleRegion.southwest.latitude,
+                            left = visibleRegion.southwest.longitude,
+                            right = visibleRegion.northeast.longitude
+                        )
+                    }
 
-                // clear previous grid if not visible anymore to improve map's performance
-                if (!grid!!.isPointCovered(visibleRegion.center)) {
-                    grid!!.clearGrid()
-                    grid = MapGrid(visibleRegion.center, settings!!.gridUnitLength.toDouble())
-                }
-                grid!!.makeGrid(visibleRegion, measurements)
-                withContext(Dispatchers.Main) {
-                    grid!!.drawGrid(googleMap)
+                    // clear previous grid if not visible anymore to improve map's performance
+                    if (!grid!!.isPointCovered(visibleRegion.center)) {
+                        withContext(Dispatchers.Main) {
+                            grid!!.clearGrid()
+                            grid = MapGrid(visibleRegion.center, settings!!.gridUnitLength.toDouble())
+                        }
+                    }
+                    grid!!.makeGrid(visibleRegion, measurements)
+                    withContext(Dispatchers.Main) {
+                        grid!!.drawGrid(googleMap)
+                    }
                 }
             }
         }
     }
 
     LaunchedEffect(Unit) {
+        locationTracker = LocationTracker(mainActivity)
+        locationTracker!!.startLocationRecording()
+        withContext(Dispatchers.IO) {
+            val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
+            grid = MapGrid(initialLatLng, settings!!.gridUnitLength.toDouble())
+        }
+    }
+
+    LaunchedEffect(variant) {
         withContext(Dispatchers.IO) {
             settings = SettingsUtils.storedSettings
             monitorSettings = when(variant) {
@@ -101,9 +116,6 @@ fun MapScreen(
                 MonitorVariant.WIFI -> settings!!.wifi
                 MonitorVariant.LTE -> settings!!.lte
             }
-
-            val initialLatLng = LatLng(LocationManager.latitude, LocationManager.longitude)
-            grid = MapGrid(initialLatLng, settings!!.gridUnitLength.toDouble())
         }
     }
 
@@ -131,7 +143,6 @@ fun MapScreen(
                     }
                 }
             },
-//                modifier = Modifier.fillMaxSize()
         )
     }
 }

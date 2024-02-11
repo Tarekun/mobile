@@ -6,20 +6,27 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import kotlin.math.cos
+import kotlin.math.roundToInt
 
-fun moveLatitude(baseLatitude: Double, distanceMeters: Double): Double {
+fun metersToLatitudeOffset(distanceMeters: Double): Double {
     val earthRadiusMeters = 6_371_000.0
-    val distanceDegreesLatitude = (distanceMeters / earthRadiusMeters) * (180 / Math.PI)
+    return (distanceMeters / earthRadiusMeters) * (180 / Math.PI)
 
+}
+fun moveLatitude(baseLatitude: Double, distanceMeters: Double): Double {
+    val distanceDegreesLatitude = metersToLatitudeOffset(distanceMeters)
     val newLatitude = baseLatitude + distanceDegreesLatitude
     return newLatitude
 }
 
-fun moveLongitude(baseLongitude: Double, distanceMeters: Double, referenceLatitude: Double): Double {
+fun metersToLongitudeOffset(distanceMeters: Double, referenceLatitude: Double): Double {
     val metersPerDegree = 111_320
     // Convert latitude to radians for the cosine calculation
     val latitudeRadians = Math.toRadians(referenceLatitude)
-    val distanceDegreesLongitude = distanceMeters / (metersPerDegree * cos(latitudeRadians))
+    return distanceMeters / (metersPerDegree * cos(latitudeRadians))
+}
+fun moveLongitude(baseLongitude: Double, distanceMeters: Double, referenceLatitude: Double): Double {
+    val distanceDegreesLongitude = metersToLongitudeOffset(distanceMeters, referenceLatitude)
     return baseLongitude + distanceDegreesLongitude
 }
 
@@ -60,11 +67,23 @@ class MapGrid(val center: LatLng, private val squareSideMeters: Double) {
     }
 
     private fun findContainingSquare(latitude: Double, longitude: Double): Square? {
-        //TODO: this can now be done in constant time making a conversion from coordinates to (hypotetical) indexes
-        for ((_, square) in squares) {
-            if (square.contains(latitude, longitude)) {
-                return square
-            }
+        val centerSquare = squares[SquareIndex(0, 0)]
+        // computes possible square y index from latitude offset between the given one and the center
+        val centerCoordinates = centerSquare!!.center
+        val latitudeDistance = latitude - centerCoordinates.latitude
+        val stepLatitudeDistance = metersToLatitudeOffset(squareSideMeters)
+        val latitudeSteps = (latitudeDistance / stepLatitudeDistance).roundToInt()
+        // average latitude to use as reference to mitigate effect if latitude and centerCoordinates.latitude
+        // get very apart
+        val averageLatitude = (latitude + centerCoordinates.latitude) / 2
+        // computes x index of possible square as before
+        val longitudeDistance = longitude - centerCoordinates.longitude
+        val stepLongitudeDistance = metersToLongitudeOffset(squareSideMeters, averageLatitude)
+        val longitudeSteps = (longitudeDistance / stepLongitudeDistance). roundToInt()
+
+        val square = squares[SquareIndex(longitudeSteps, latitudeSteps)]
+        if (square?.contains(latitude, longitude) ?: false) {
+            return square
         }
         return null
     }
@@ -89,14 +108,13 @@ class MapGrid(val center: LatLng, private val squareSideMeters: Double) {
         return newSquare
     }
 
-    private fun isAreaCovered(areaToCover: LatLngBounds): Boolean {
+    fun isAreaCovered(areaToCover: LatLngBounds): Boolean {
         val southeast = LatLng(areaToCover.southwest.latitude, areaToCover.northeast.longitude)
         val northwest = LatLng(areaToCover.northeast.latitude, areaToCover.southwest.longitude)
         return coveredArea.contains(areaToCover.northeast) && coveredArea.contains(northwest) && coveredArea.contains(southeast) && coveredArea.contains(areaToCover.southwest)
     }
 
     private fun addHorizontalSegment(direction: Int) {
-        Log.d("mio", "ORIZZONTALE $direction")
         val baseIndex = if (direction == 1) topLeftIndex else bottomLeftIndex
         for (i in 0 until rowsLength) {
             // add i to x to move horizontally
@@ -139,7 +157,6 @@ class MapGrid(val center: LatLng, private val squareSideMeters: Double) {
     }
 
     private fun addVerticalSegment(direction: Int) {
-        Log.d("mio", "VERTICALE $direction")
         val baseIndex = if (direction == 1) bottomRightIndex else bottomLeftIndex
         for (j in 0 until columnsLength) {
             val adjacentSquare = squares[baseIndex.copy(y = baseIndex.y + j)]
@@ -201,11 +218,12 @@ class MapGrid(val center: LatLng, private val squareSideMeters: Double) {
     }
 
     private fun countClassifications(measurements: List<Measurement>) {
+        var persi = 0
         for (measurement in measurements) {
             val containingSquare = findContainingSquare(measurement.latitude, measurement.longitude)
             if (containingSquare != null) {
                 containingSquare.addClassification(measurement.classification)
-            }
+            } else persi++
         }
     }
 

@@ -5,7 +5,6 @@ import java.util.Stack
 enum class Screens {
     MONITORING,
     SETTINGS,
-    EXPORT,
     PROXIMITY_SHARE,
     MAP_SCREEN,
 }

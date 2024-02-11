@@ -1,5 +1,6 @@
 package com.example.mobile.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -16,15 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.mobile.R
-import com.example.mobile.composables.AlertSeverity
 import com.example.mobile.composables.AlertTextbox
 import com.example.mobile.composables.CollapsableSettings
+import com.example.mobile.composables.ExportSettings
 import com.example.mobile.composables.NumberSetting
 import com.example.mobile.composables.OptionsSetting
-import com.example.mobile.composables.SettingLayout
 import com.example.mobile.composables.SwitchSetting
 import com.example.mobile.database.MonitorSettings
-import com.example.mobile.database.SettingsNames
 import com.example.mobile.database.SettingsTable
 import com.example.mobile.database.SettingsUtils
 import com.example.mobile.monitors.MonitorVariant
@@ -38,12 +37,10 @@ fun SettingsScreen(
     navigateTo: (targetScreen: Screens) -> Unit,
     startNotifyingInNewArea: () -> Unit,
     stopNotifying: () -> Unit,
+    startIntent: (intent: Intent) -> Unit,
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    //TODO: properly initialize
-    val gridSizes = listOf(10, 100, 1000)
-    val notificationFrequencies = listOf<Long>(0, 1000*60*60*12, 1000*60*60*24, 1000*60*60*24*7)
 
     var settings: SettingsTable? by remember { mutableStateOf(null) }
     var monitorSettings: MonitorSettings? by remember { mutableStateOf(null) }
@@ -91,32 +88,31 @@ fun SettingsScreen(
         modifier = Modifier.verticalScroll(scrollState)
     ) {
         AlertTextbox(
-            severity = AlertSeverity.INFO,
             content = LocalContext.current.getString(R.string.settings_alert_note)
         )
 
-        //TODO: cambiare l'unità di misura
         NumberSetting(
             title = context.getString(R.string.period_setting_title),
             description = context.getString(R.string.period_setting_desc),
-            value = monitorSettings?.monitorPeriod ?: 0,
+            value = (monitorSettings?.monitorPeriod ?: 0) / 1000,
             onChange = {
+                val newPeriodMs = 1000 * it
                 when(variant) {
                     MonitorVariant.AUDIO -> settings = settings!!.copy(
                         audio = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.audio.measurementNumber,
                         )
                     )
                     MonitorVariant.WIFI -> settings = settings!!.copy(
                         wifi = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.wifi.measurementNumber,
                         )
                     )
                     MonitorVariant.LTE -> settings = settings!!.copy(
                         lte = MonitorSettings(
-                            it,
+                            newPeriodMs,
                             settings!!.lte.measurementNumber,
                         )
                     )
@@ -161,20 +157,8 @@ fun SettingsScreen(
                     gridUnitLength = it
                 )
             },
-            options = gridSizes
-        )
-        SwitchSetting(
-            title = context.getString(R.string.settingscreen_newarea_notification_title),
-            label = if(settings!!.notifyInNewArea) {
-                        context.getString(R.string.settingscreen_newarea_notification_enabled)
-                    } else {
-                        context.getString(R.string.settingscreen_newarea_notification_disabled)
-                    },
-            onClick = {
-                settings = settings!!.copy(notifyInNewArea = !(settings!!.notifyInNewArea))
-            },
-            value = settings!!.notifyInNewArea,
-            contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
+            options = SettingsUtils.gridSizes,
+            getLabel = { "$it m" }
         )
         SwitchSetting(
             title = context.getString(R.string.settingscreen_external_title),
@@ -190,6 +174,19 @@ fun SettingsScreen(
             contentDescription = context.getString(R.string.settingscreen_external_description)
         )
 
+        SwitchSetting(
+            title = context.getString(R.string.settingscreen_newarea_notification_title),
+            label = if(settings!!.notifyInNewArea) {
+                        context.getString(R.string.settingscreen_newarea_notification_enabled)
+                    } else {
+                        context.getString(R.string.settingscreen_newarea_notification_disabled)
+                    },
+            onClick = {
+                settings = settings!!.copy(notifyInNewArea = !(settings!!.notifyInNewArea))
+            },
+            value = settings!!.notifyInNewArea,
+            contentDescription = context.getString(R.string.settingscreen_newarea_notification_description)
+        )
         CollapsableSettings(
             label = context.getString(R.string.settingscreen_collapse_notification_title),
             content = {
@@ -218,7 +215,7 @@ fun SettingsScreen(
                                 notifyOnlyAboveLength = it
                             )
                         },
-                        options = gridSizes,
+                        options = SettingsUtils.gridSizes,
                         getLabel = { "$it m" }
                     )
 
@@ -232,21 +229,17 @@ fun SettingsScreen(
                             )
                         },
                         // no cooldown, half a day, a day, a week
-                        options = notificationFrequencies,
+                        options = SettingsUtils.notificationFrequencies,
                         getLabel = {
                             when (it) {
-                                notificationFrequencies[0] ->
+                                SettingsUtils.notificationFrequencies[0] ->
                                     context.getString(R.string.settingscreen_notification_frequency_always)
-
-                                notificationFrequencies[1] ->
+                                SettingsUtils.notificationFrequencies[1] ->
                                     context.getString(R.string.settingscreen_notification_frequency_tad)
-
-                                notificationFrequencies[2] ->
+                                SettingsUtils.notificationFrequencies[2] ->
                                     context.getString(R.string.settingscreen_notification_frequency_oad)
-
-                                notificationFrequencies[3] ->
+                                SettingsUtils.notificationFrequencies[3] ->
                                     context.getString(R.string.settingscreen_notification_frequency_oaw)
-
                                 else ->
                                     it.toString()
                             }
@@ -255,15 +248,10 @@ fun SettingsScreen(
                 }
             }
         )
-
-        SettingLayout(
-            inputField = {
-                OutlinedButton(
-                    onClick = { navigateTo(Screens.EXPORT) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(context.getString(R.string.settingscreen_export_button))
-                }
+        CollapsableSettings(
+            label = context.getString(R.string.settingscreen_export_menu),
+            content = {
+                ExportSettings(variant = variant, startIntent = startIntent)
             }
         )
     }
