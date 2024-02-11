@@ -103,15 +103,19 @@ fun MapScreen(
         locationTracker = LocationTracker(mainActivity)
         locationTracker!!.startLocationRecording()
         withContext(Dispatchers.IO) {
+            val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
+            grid = MapGrid(initialLatLng, settings!!.gridUnitLength.toDouble())
+        }
+    }
+
+    LaunchedEffect(variant) {
+        withContext(Dispatchers.IO) {
             settings = SettingsUtils.storedSettings
             monitorSettings = when(variant) {
                 MonitorVariant.AUDIO -> settings!!.audio
                 MonitorVariant.WIFI -> settings!!.wifi
                 MonitorVariant.LTE -> settings!!.lte
             }
-
-            val initialLatLng = LatLng(locationTracker!!.latitude, locationTracker!!.longitude)
-            grid = MapGrid(initialLatLng, settings!!.gridUnitLength.toDouble())
         }
     }
 

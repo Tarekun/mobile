@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
 fun permissionForMonitor(variant: MonitorVariant): String {
     return when (variant) {
         MonitorVariant.AUDIO -> Manifest.permission.RECORD_AUDIO
-        MonitorVariant.WIFI -> Manifest.permission.ACCESS_FINE_LOCATION
+        MonitorVariant.WIFI -> Manifest.permission.ACCESS_WIFI_STATE
         MonitorVariant.LTE -> Manifest.permission.READ_PHONE_STATE
     }
 }
